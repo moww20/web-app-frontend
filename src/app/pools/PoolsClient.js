@@ -13,6 +13,8 @@ export default function PoolsClient() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
   const [isBribeOpen, setIsBribeOpen] = useState(false)
   const [isVoteOpen, setIsVoteOpen] = useState(false)
+  const pageSize = 6
+  const [page, setPage] = useState(1)
 
   useEffect(() => {
     const onKey = (e) => {
@@ -22,14 +24,24 @@ export default function PoolsClient() {
     return () => document.removeEventListener("keydown", onKey)
   }, [])
 
+  const pools = Array.from({ length: 24 }).map((_, i) => ({
+    id: i + 1,
+    pair: "TokenA / TokenB",
+  }))
+  const total = pools.length
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
+  const currentPage = Math.min(page, totalPages)
+  const startIdx = (currentPage - 1) * pageSize
+  const visible = pools.slice(startIdx, startIdx + pageSize)
+
   const btnClass = "h-8 w-36 px-4 rounded-lg hairline hover:bg-white/5 text-sm inline-flex items-center justify-center whitespace-nowrap"
-  const rows = Array.from({ length: 6 }).map((_, i) => (
+  const rows = visible.map((row) => (
     <div
-      key={i}
+      key={row.id}
       className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 md:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.5fr)_auto] lg:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.5fr)_minmax(0,1fr)_auto] xl:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.5fr)_minmax(0,1fr)_minmax(0,1fr)_auto] items-center px-4 py-3 hairline-b last:hairline-b-0 cursor-pointer hover:bg-white/3"
       onClick={() => setIsDetailsOpen(true)}
     >
-      <div className="min-w-0">TokenA / TokenB</div>
+      <div className="min-w-0">{row.pair}</div>
       <div className="hidden sm:block min-w-0">$ —</div>
       <div className="hidden md:block min-w-0">APR —</div>
       <div className="hidden lg:block min-w-0">Liquidity —</div>
@@ -59,6 +71,37 @@ export default function PoolsClient() {
           <div>Actions</div>
         </div>
         {rows}
+        <div className="flex items-center justify-between px-4 py-3 text-sm">
+          <button
+            className="px-3 py-1.5 rounded-full hairline hover:bg-white/5 disabled:opacity-50"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </button>
+          <div className="flex items-center gap-1">
+            {Array.from({ length: totalPages }).map((_, idx) => {
+              const p = idx + 1
+              const active = p === currentPage
+              return (
+                <button
+                  key={p}
+                  className={`w-8 h-8 rounded-full text-xs hairline ${active ? "bg-white/10" : "hover:bg-white/5"}`}
+                  onClick={() => setPage(p)}
+                >
+                  {p}
+                </button>
+              )
+            })}
+          </div>
+          <button
+            className="px-3 py-1.5 rounded-full hairline hover:bg-white/5 disabled:opacity-50"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </button>
+        </div>
       </section>
 
       {isSwapOpen && (
