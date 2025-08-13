@@ -26,7 +26,7 @@ export default function PoolsClient() {
   const rows = Array.from({ length: 6 }).map((_, i) => (
     <div
       key={i}
-      className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:[grid-template-columns:minmax(0,1fr)_6rem_5rem_7rem_auto] xl:[grid-template-columns:minmax(0,1fr)_7rem_6rem_8rem_7rem_auto] items-center px-4 py-3 hairline-b last:hairline-b-0 cursor-pointer hover:bg-white/3"
+      className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 md:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.5fr)_auto] lg:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.5fr)_minmax(0,1fr)_auto] xl:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.5fr)_minmax(0,1fr)_minmax(0,1fr)_auto] items-center px-4 py-3 hairline-b last:hairline-b-0 cursor-pointer hover:bg-white/3"
       onClick={() => setIsDetailsOpen(true)}
     >
       <div className="min-w-0">TokenA / TokenB</div>
@@ -50,7 +50,7 @@ export default function PoolsClient() {
       </div>
 
       <section className="glass hairline rounded-2xl overflow-hidden">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:[grid-template-columns:minmax(0,1fr)_6rem_5rem_7rem_auto] xl:[grid-template-columns:minmax(0,1fr)_7rem_6rem_8rem_7rem_auto] px-4 py-3 text-sm text-[--color-muted] hairline-b bg-white/5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 md:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.5fr)_auto] lg:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.5fr)_minmax(0,1fr)_auto] xl:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.5fr)_minmax(0,1fr)_minmax(0,1fr)_auto] px-4 py-3 text-sm text-[--color-muted] hairline-b bg-white/5">
           <div>Pool</div>
           <div className="hidden sm:block">24h Volume</div>
           <div className="hidden md:block">APR</div>
