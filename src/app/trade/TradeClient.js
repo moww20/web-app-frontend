@@ -13,6 +13,9 @@ export default function TradeClient() {
   const [swapWidth, setSwapWidth] = useState(0)
   const CHART_WIDTH = 520
   const GAP = 24
+  const [activeRange, setActiveRange] = useState('1D')
+  const [scaleMode, setScaleMode] = useState('linear')
+  const [priceMode, setPriceMode] = useState('price')
 
   useEffect(() => {
     const onMode = (e) => setMode(e.detail)
@@ -62,22 +65,26 @@ export default function TradeClient() {
                     { label: '1M', hours: 24*30 },
                     { label: '1Y', hours: 24*365 },
                   ].map(r => (
-                    <button key={r.label} className="px-2 py-1 rounded-full hover:bg-white/5"
-                      onClick={() => window.dispatchEvent(new CustomEvent('monswap:chart-range', { detail: { hours: r.hours } }))}>
+                    <button key={r.label}
+                      className={`px-2 py-1 rounded-full hover:bg-white/5 ${activeRange===r.label ? 'bg-white/10' : ''}`}
+                      onClick={() => { setActiveRange(r.label); window.dispatchEvent(new CustomEvent('monswap:chart-range', { detail: { hours: r.hours } })) }}>
                       {r.label}
                     </button>
                   ))}
                 </div>
                 <div className="inline-flex items-center">
                   <div className="inline-flex items-center hairline rounded-full mr-2">
-                    <button className="px-2 py-1 rounded-l-full hover:bg-white/5" title="Linear"
-                      onClick={() => window.dispatchEvent(new CustomEvent('monswap:chart-scale', { detail: { mode: 'linear' } }))}>↗</button>
-                    <button className="px-2 py-1 rounded-r-full hover:bg-white/5" title="Log"
-                      onClick={() => window.dispatchEvent(new CustomEvent('monswap:chart-scale', { detail: { mode: 'log' } }))}>∿</button>
+                    <button className={`px-2 py-1 rounded-l-full hover:bg-white/5 ${scaleMode==='linear'?'bg-white/10':''}`} title="Linear"
+                      onClick={() => { setScaleMode('linear'); window.dispatchEvent(new CustomEvent('monswap:chart-scale', { detail: { mode: 'linear' } }))}}>↗</button>
+                    <button className={`px-2 py-1 rounded-r-full hover:bg-white/5 ${scaleMode==='log'?'bg-white/10':''}`} title="Log"
+                      onClick={() => { setScaleMode('log'); window.dispatchEvent(new CustomEvent('monswap:chart-scale', { detail: { mode: 'log' } }))}}>∿</button>
                   </div>
-                  <div className="inline-flex items-center hairline rounded-full px-2 py-1">
-                    <select className="bg-transparent text-xs outline-none" defaultValue="price"
-                      onChange={(e)=> window.dispatchEvent(new CustomEvent('monswap:chart-priceMode', { detail: { kind: e.target.value } }))}>
+                  <div className="inline-flex items-center rounded-full px-0 py-0">
+                    <select
+                      className="text-xs outline-none bg-[#141414] hairline rounded-full px-3 py-1"
+                      value={priceMode}
+                      onChange={(e)=> { setPriceMode(e.target.value); window.dispatchEvent(new CustomEvent('monswap:chart-priceMode', { detail: { kind: e.target.value } })) }}
+                    >
                       <option value="price">Price</option>
                       <option value="percent">%</option>
                       <option value="index">Index</option>

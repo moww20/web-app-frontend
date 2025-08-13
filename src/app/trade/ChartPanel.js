@@ -84,7 +84,9 @@ export default function ChartPanel({ height, useMock = true, pair = "ETH/USDT" }
         if (typeof areaSeries.setMarkers === 'function') {
           areaSeries.setMarkers(markers)
         }
-        chart.timeScale().fitContent()
+        // Default to 1D visible range
+        chart.priceScale('right').applyOptions({ mode: PriceScaleMode.Normal })
+        chart.timeScale().setVisibleRange({ from: lastTs - 24*60*60, to: lastTs })
         return
       }
       try {
