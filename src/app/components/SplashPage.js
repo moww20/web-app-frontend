@@ -167,6 +167,13 @@ function MorphingParticles({ text = "MONSWAP", phase = "cubes" }) {
         }
       }
     }
+    // Ensure there are targets; fallback to a simple line if text rasterization fails
+    if (pts.length === 0) {
+      for (let i = 0; i < 1200; i++) {
+        const t = (i / 1200) * Math.PI * 2
+        pts.push(new THREE.Vector3(Math.cos(t) * 3.5, Math.sin(t) * 0.4, 0))
+      }
+    }
     return pts
   }, [text])
 
@@ -211,6 +218,11 @@ function MorphingParticles({ text = "MONSWAP", phase = "cubes" }) {
 
   useFrame((state, delta) => {
     if (!meshRef.current) return
+    const totalTargets = targetPositions.length
+    const ip = initialPositionsRef.current
+    const vel = velocitiesRef.current
+    // Safety guards to avoid accessing undefined arrays during first frames
+    if (totalTargets === 0 || ip.length < count || vel.length < count) return
     const dummy = new THREE.Object3D()
     const now = state.clock.getElapsedTime()
     const exploded = phase !== 'cubes'
@@ -225,12 +237,12 @@ function MorphingParticles({ text = "MONSWAP", phase = "cubes" }) {
     const totalDur = explodeDur + morphDur
     const morphK = THREE.MathUtils.clamp((t - morphStart) / morphDur, 0, 1)
 
-    const ip = initialPositionsRef.current
-    const vel = velocitiesRef.current
     for (let i = 0; i < count; i++) {
       const init = ip[i]
-      const idx = Math.floor((i / count) * targetPositions.length)
+      if (!init) continue
+      const idx = Math.floor((i / count) * totalTargets)
       const target = targetPositions[idx]
+      if (!target) continue
       let pos
       if (!exploded) {
         pos = init
@@ -248,7 +260,7 @@ function MorphingParticles({ text = "MONSWAP", phase = "cubes" }) {
       const shardScale = baseS * (scalesRef.current[i] || 1)
       dummy.scale.setScalar(shardScale)
       const r = rotationsRef.current[i]
-      if (r) dummy.rotation.set(r.x, r.y + morphK * 0.3, r.z)
+      if (r) dummy.rotation.set(r.x || 0, (r.y || 0) + morphK * 0.3, r.z || 0)
       dummy.updateMatrix()
       meshRef.current.setMatrixAt(i, dummy.matrix)
     }
