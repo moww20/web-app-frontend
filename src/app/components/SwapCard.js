@@ -110,7 +110,7 @@ export default function SwapCard() {
         if (s.maxSlippage != null) setMaxSlippage(String(s.maxSlippage))
         if (s.slippageAuto != null) setSlippageAuto(Boolean(s.slippageAuto))
         if (s.deadlineMins != null) setDeadlineMins(String(s.deadlineMins))
-        if (s.mode === "basic" || s.mode === "pro") setMode(s.mode)
+        // Always default to Basic on load regardless of previously saved mode
       }
     } catch {}
   }, [])
