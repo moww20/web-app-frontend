@@ -13,6 +13,7 @@ export default function ChartPanel({ height }) {
       layout: {
         background: { color: "#111114" },
         textColor: "#c8c8c8",
+        attributionLogo: false,
       },
       grid: {
         vertLines: { color: "rgba(255,255,255,0.06)" },
@@ -48,7 +49,8 @@ export default function ChartPanel({ height }) {
     load()
 
     const onResize = () => {
-      chart.applyOptions({ height: height || 520, width: containerRef.current?.clientWidth || 520 })
+      const w = containerRef.current?.clientWidth || 520
+      chart.applyOptions({ height: height || 520, width: w })
     }
     onResize()
     const ro = new ResizeObserver(onResize)
