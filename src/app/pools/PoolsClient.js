@@ -56,11 +56,7 @@ export default function PoolsClient() {
   ))
 
   return (
-    <main className="min-h-[80vh] max-w-7xl mx-auto px-6 py-24">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl md:text-4xl font-light tracking-tight">Liquidity Pools</h1>
-      </div>
-
+    <div>
       <section className="glass hairline rounded-2xl overflow-hidden">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 md:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.5fr)_auto] lg:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.5fr)_minmax(0,1fr)_auto] xl:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.5fr)_minmax(0,1fr)_minmax(0,1fr)_auto] px-4 py-3 text-sm text-[--color-muted] hairline-b bg-white/5">
           <div>Pool</div>
@@ -168,7 +164,7 @@ export default function PoolsClient() {
           </div>
         </div>
       )}
-    </main>
+    </div>
   )
 }
 
