@@ -2,14 +2,14 @@
 
 import { Canvas } from "@react-three/fiber"
 import { Environment } from "@react-three/drei"
-import { useRef, useEffect, useState, useMemo } from "react"
-import * as THREE from "three"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useFrame } from "@react-three/fiber"
+import * as THREE from "three"
 import { motion } from "framer-motion"
 import Link from "next/link"
 // Navbar is now global, no local connect button needed here
 
-function SimpleCube({ position, color, id, cubeRefs }) {
+function SimpleCube({ position, color, id, cubeRefs, visible = true }) {
   const meshRef = useRef()
   const posRef = useRef([...position])
   const velocityRef = useRef([
@@ -26,6 +26,11 @@ function SimpleCube({ position, color, id, cubeRefs }) {
   }
   
   useFrame(() => {
+    if (!visible) {
+      if (meshRef.current) meshRef.current.visible = false
+      return
+    }
+    if (meshRef.current) meshRef.current.visible = true
     if (meshRef.current) {
       meshRef.current.rotation.x += 0.02
       meshRef.current.rotation.y += 0.02
@@ -89,203 +94,163 @@ function SimpleCube({ position, color, id, cubeRefs }) {
   })
   
   return (
-    <mesh ref={meshRef} position={position} castShadow receiveShadow>
+    <mesh ref={meshRef} position={position} castShadow receiveShadow visible={visible}>
       <boxGeometry args={[1.2, 1.2, 1.2]} />
       <meshStandardMaterial color={color} metalness={1} roughness={0.08} envMapIntensity={1.1} />
     </mesh>
   )
 }
 
-// Navbar moved to global layout
-
-function ParticleLogoScene() {
-  const pointsRef = useRef(null)
-  const geometryRef = useRef(null)
-  const [ready, setReady] = useState(false)
-  const [mode, setMode] = useState('monsters') // 'monsters' | 'logo'
-  const particleCount = 16000
-  const bounds = useMemo(() => ({ x: 6.0, y: 3.0 }), [])
-
-  // Static buffers
-  const seedsRef = useRef(new Float32Array(particleCount))
-  const clusterRef = useRef(new Uint8Array(particleCount))
-  const logoTargetsRef = useRef(new Float32Array(particleCount * 3))
-  // Per-cluster monster shape offsets (local space around [0,0])
-  const monsterShapesRef = useRef([[], [], [], []])
-  // Map each particle to an index in its cluster's shape array
-  const shapeIndexRef = useRef(new Uint32Array(particleCount))
-
-  // Attractors for four "monsters"
-  const attractorsRef = useRef(
-    Array.from({ length: 4 }).map(() => ({
-      pos: [ (Math.random()*0.5), (Math.random()*0.5), 0 ],
-      vel: [ (Math.random()-0.5)*0.02, (Math.random()-0.5)*0.02, 0 ],
-    }))
+function CubeScene({ visible = true }) {
+  const cubeRefs = useRef({})
+  
+  return (
+    <>
+      <SimpleCube position={[-2, 0, 0]} color="#eaeef3" id={0} cubeRefs={cubeRefs} visible={visible} />
+      <SimpleCube position={[2, 0, 0]} color="#d7dbe2" id={1} cubeRefs={cubeRefs} visible={visible} />
+      <SimpleCube position={[0, 2, 0]} color="#f5f7fa" id={2} cubeRefs={cubeRefs} visible={visible} />
+    </>
   )
+}
 
-  useEffect(() => {
-    // Init geometry positions randomly
-    const positions = new Float32Array(particleCount * 3)
-    for (let i = 0; i < particleCount; i++) {
-      positions[3*i+0] = (Math.random()*2-1) * 1.5
-      positions[3*i+1] = (Math.random()*2-1) * 1.0
-      positions[3*i+2] = 0
-      seedsRef.current[i] = Math.random()*10 + 1
-      clusterRef.current[i] = i % 4
-    }
-    geometryRef.current.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-    setReady(true)
-  }, [])
+function MorphingParticles({ text = "MONSWAP", phase = "cubes" }) {
+  const meshRef = useRef()
+  const count = 1800
 
-  useEffect(() => {
-    // Load logo and compute target positions
-    const img = new Image()
-    img.src = '/monswaplogo.png'
-    img.crossOrigin = 'anonymous'
-    img.onload = () => {
-      const cvs = document.createElement('canvas')
-      const ctx = cvs.getContext('2d')
-      const targetW = 320
-      const scale = targetW / img.width
-      cvs.width = targetW
-      cvs.height = Math.max(1, Math.floor(img.height * scale))
-      ctx.drawImage(img, 0, 0, cvs.width, cvs.height)
-      const data = ctx.getImageData(0, 0, cvs.width, cvs.height).data
-      const pixels = []
-      for (let y = 0; y < cvs.height; y += 1) {
-        for (let x = 0; x < cvs.width; x += 1) {
-          const idx = (y * cvs.width + x) * 4
-          const a = data[idx + 3]
-          if (a > 64) {
-            // Map to world coords, center at (0,0)
-            const wx = (x / cvs.width - 0.5) * 5.0
-            const wy = (0.5 - y / cvs.height) * 2.6
-            pixels.push([wx, wy, 0])
-          }
+  const cubeCenters = useMemo(() => [
+    new THREE.Vector3(-2, 0, 0),
+    new THREE.Vector3(2, 0, 0),
+    new THREE.Vector3(0, 2, 0),
+  ], [])
+
+  const targetPositions = useMemo(() => {
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    const W = 800, H = 200
+    canvas.width = W
+    canvas.height = H
+    ctx.clearRect(0, 0, W, H)
+    ctx.fillStyle = '#fff'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.font = 'bold 150px system-ui, Arial, sans-serif'
+    ctx.fillText(text, W/2, H/2)
+    const image = ctx.getImageData(0, 0, W, H).data
+    const pts = []
+    const step = 4
+    for (let y = 0; y < H; y += step) {
+      for (let x = 0; x < W; x += step) {
+        const idx = (y * W + x) * 4
+        if (image[idx + 3] > 180) {
+          const nx = (x / W) * 12 - 6
+          const ny = -((y / H) * 3 - 1.5)
+          const nz = (Math.random() - 0.5) * 0.2
+          pts.push(new THREE.Vector3(nx, ny, nz))
         }
       }
-      // Assign logo targets by cycling through sampled pixels
-      for (let i = 0; i < particleCount; i++) {
-        const p = pixels[i % pixels.length] || [0,0,0]
-        // add micro jitter to reduce banding
-        logoTargetsRef.current[3*i+0] = p[0] + (Math.random()-0.5)*0.02
-        logoTargetsRef.current[3*i+1] = p[1] + (Math.random()-0.5)*0.02
-        logoTargetsRef.current[3*i+2] = p[2]
-      }
     }
-  }, [particleCount])
+    return pts
+  }, [text])
 
-  useEffect(() => {
-    // Load 4 monsters from a spritesheet 'pixelmonsters.png' (4 columns)
-    const img = new Image()
-    img.src = '/pixelmonsters.png'
-    img.crossOrigin = 'anonymous'
-    img.onload = () => {
-      const cols = 4
-      const cellW = Math.floor(img.width / cols)
-      const cellH = img.height
-      const targetW = 220 // scale each monster width larger for more detail
-      const scale = targetW / cellW
-      const cvs = document.createElement('canvas')
-      const ctx = cvs.getContext('2d')
-      cvs.width = Math.max(1, Math.floor(cellW * scale))
-      cvs.height = Math.max(1, Math.floor(cellH * scale))
-      const clusters = [[], [], [], []]
-      for (let m = 0; m < 4; m++) {
-        ctx.clearRect(0,0,cvs.width,cvs.height)
-        ctx.drawImage(img, m * cellW, 0, cellW, cellH, 0, 0, cvs.width, cvs.height)
-        const data = ctx.getImageData(0, 0, cvs.width, cvs.height).data
-        const pts = []
-        // Higher resolution sampling
-        const step = 1
-        for (let y = 0; y < cvs.height; y += step) {
-          for (let x = 0; x < cvs.width; x += step) {
-            const idx = (y * cvs.width + x) * 4
-            const a = data[idx + 3]
-            if (a > 64) {
-              const nx = (x / cvs.width - 0.5) * 2.6 // normalize wider
-              const ny = (0.5 - y / cvs.height) * 2.6
-              pts.push([nx, ny, 0])
-            }
-          }
-        }
-        clusters[m] = pts
-      }
-      monsterShapesRef.current = clusters
-      // Assign a shape index per particle within its cluster
-      for (let i = 0; i < particleCount; i++) {
-        const c = clusterRef.current[i]
-        const pts = monsterShapesRef.current[c]
-        shapeIndexRef.current[i] = pts.length ? (i % pts.length) : 0
-      }
+  const initialPositionsRef = useRef([])
+  const velocitiesRef = useRef([])
+  const startedRef = useRef(false)
+  const startTimeRef = useRef(0)
+
+  useEffectOnce(() => {
+    const initial = []
+    const velocities = []
+    for (let i = 0; i < count; i++) {
+      const center = cubeCenters[i % cubeCenters.length]
+      const p = new THREE.Vector3(
+        center.x + (Math.random() - 0.5) * 0.8,
+        center.y + (Math.random() - 0.5) * 0.8,
+        center.z + (Math.random() - 0.5) * 0.2,
+      )
+      initial.push(p)
+      const v = new THREE.Vector3(
+        (Math.random() - 0.5) * 1.8,
+        (Math.random() - 0.5) * 1.8,
+        (Math.random() - 0.5) * 0.6,
+      )
+      velocities.push(v)
     }
-  }, [particleCount])
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setMode(m => (m === 'monsters' ? 'logo' : 'monsters'))
-    }, 8000)
-    return () => clearInterval(id)
-  }, [])
+    initialPositionsRef.current = initial
+    velocitiesRef.current = velocities
+  })
 
   useFrame((state, delta) => {
-    if (!ready || !geometryRef.current) return
-    const t = state.clock.elapsedTime
-    const pos = geometryRef.current.attributes.position.array
-    // Update attractors random-walk within bounds
-    for (const a of attractorsRef.current) {
-      a.pos[0] += a.vel[0]
-      a.pos[1] += a.vel[1]
-      // bounce
-      if (a.pos[0] > bounds.x) { a.pos[0] = bounds.x; a.vel[0] *= -1 }
-      if (a.pos[0] < -bounds.x) { a.pos[0] = -bounds.x; a.vel[0] *= -1 }
-      if (a.pos[1] > bounds.y) { a.pos[1] = bounds.y; a.vel[1] *= -1 }
-      if (a.pos[1] < -bounds.y) { a.pos[1] = -bounds.y; a.vel[1] *= -1 }
-      // slight drift
-      a.vel[0] += (Math.random()-0.5)*0.001
-      a.vel[1] += (Math.random()-0.5)*0.001
-      a.vel[0] = Math.max(-0.03, Math.min(0.03, a.vel[0]))
-      a.vel[1] = Math.max(-0.03, Math.min(0.03, a.vel[1]))
+    if (!meshRef.current) return
+    const dummy = new THREE.Object3D()
+    const now = state.clock.getElapsedTime()
+    const exploded = phase !== 'cubes'
+    if (exploded && !startedRef.current) {
+      startedRef.current = true
+      startTimeRef.current = now
     }
+    const t = Math.max(0, now - startTimeRef.current)
+    const explodeDur = 0.5
+    const morphStart = explodeDur
+    const morphDur = 1.6
+    const totalDur = explodeDur + morphDur
+    const morphK = THREE.MathUtils.clamp((t - morphStart) / morphDur, 0, 1)
 
-    for (let i = 0; i < particleCount; i++) {
-      const ix = 3*i
-      let tx, ty, tz
-      if (mode === 'logo') {
-        tx = logoTargetsRef.current[ix]
-        ty = logoTargetsRef.current[ix+1]
-        tz = 0
+    const ip = initialPositionsRef.current
+    const vel = velocitiesRef.current
+    for (let i = 0; i < count; i++) {
+      const init = ip[i]
+      const idx = Math.floor((i / count) * targetPositions.length)
+      const target = targetPositions[idx]
+      let pos
+      if (!exploded) {
+        pos = init
+      } else if (t < explodeDur) {
+        init.add(vel[i].clone().multiplyScalar(delta * 2.2))
+        vel[i].multiplyScalar(0.98)
+        pos = init
       } else {
-        const c = clusterRef.current[i]
-        const a = attractorsRef.current[c]
-        const s = seedsRef.current[i]
-        const pts = monsterShapesRef.current[c]
-        if (pts && pts.length) {
-          const [ox, oy] = pts[ shapeIndexRef.current[i] % pts.length ]
-          // Base on monster local shape offset, plus a subtle wobble
-          tx = a.pos[0] + ox + Math.sin(t*1.4 + s) * 0.05
-          ty = a.pos[1] + oy + Math.cos(t*1.2 + s*0.7) * 0.05
-          tz = 0
-        } else {
-          // fallback to cloud if shape not ready
-          tx = a.pos[0] + Math.sin(t*0.8 + s)*0.6
-          ty = a.pos[1] + Math.cos(t*0.7 + s*0.7)*0.45
-          tz = 0
-        }
+        const toTarget = target.clone().sub(init)
+        const lerpPos = init.clone().add(toTarget.multiplyScalar(morphK))
+        pos = lerpPos
       }
-      // smooth follow
-      pos[ix]   += (tx - pos[ix]) * 0.10
-      pos[ix+1] += (ty - pos[ix+1]) * 0.10
-      pos[ix+2] += (tz - pos[ix+2]) * 0.10
+      dummy.position.copy(pos)
+      const s = exploded ? (t < totalDur ? THREE.MathUtils.lerp(0.012, 0.016, Math.min(1, t / 0.6)) : 0.016) : 0.012
+      dummy.scale.setScalar(s)
+      dummy.updateMatrix()
+      meshRef.current.setMatrixAt(i, dummy.matrix)
     }
-    geometryRef.current.attributes.position.needsUpdate = true
+    meshRef.current.instanceMatrix.needsUpdate = true
   })
 
   return (
-    <points ref={pointsRef}>
-      <bufferGeometry ref={geometryRef} />
-      <pointsMaterial color="#e6e6e6" size={0.035} sizeAttenuation transparent opacity={0.95} />
-    </points>
+    <instancedMesh ref={meshRef} args={[null, null, count]}>
+      <sphereGeometry args={[1, 8, 8]} />
+      <meshStandardMaterial color="#e6e6e6" metalness={0.2} roughness={0.4} />
+    </instancedMesh>
+  )
+}
+
+function useEffectOnce(callback) {
+  const callbackRef = useRef(callback)
+  useEffect(() => {
+    callbackRef.current = callback
+  })
+  useEffect(() => {
+    return callbackRef.current && callbackRef.current()
+  }, [])
+}
+
+function DiceToTextScene() {
+  const [phase, setPhase] = useState('cubes')
+  useFrame(({ clock }) => {
+    const t = clock.getElapsedTime()
+    if (phase === 'cubes' && t > 2.0) setPhase('morph')
+  })
+  return (
+    <>
+      <CubeScene visible={phase === 'cubes'} />
+      <MorphingParticles phase={phase} />
+    </>
   )
 }
 
@@ -329,14 +294,22 @@ export default function SplashPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
+          <h1 className="text-6xl md:text-8xl lg:text-[9rem] font-extralight tracking-tight leading-none text-shine">
+            MONSWAP
+          </h1>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.3 }}
           >
             <p className="mt-4 text-lg md:text-xl text-[--color-muted] max-w-2xl mx-auto leading-relaxed">
-              Ultra-fast, deeply liquid, and truly decentralized. <br />Built for the Monad ecosystem.
+              Ultra-fast, deeply liquid, and truly decentralized. Built for the Monad ecosystem.
             </p>
+            <div className="mt-8 flex items-center justify-center">
+              <Link href="/trade" className="px-6 py-3 rounded-full bg-accent-gradient text-white font-medium hover:opacity-90 transition">
+                Get started
+              </Link>
+            </div>
           </motion.div>
         </motion.div>
         
@@ -378,7 +351,7 @@ export default function SplashPage() {
             {/* Subtle studio environment for better reflections */}
             <Environment preset="studio" intensity={0.5} />
 
-            <ParticleLogoScene />
+            <DiceToTextScene />
 
             {/* Ground plane for shadows */}
             <mesh receiveShadow position={[0, -4, 0]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -389,7 +362,7 @@ export default function SplashPage() {
         </div>
         
         <motion.div
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-6 relative z-10 max-w-6xl w-full px-4"
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-16 relative z-10 max-w-6xl w-full px-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 0.5 }}
@@ -413,17 +386,26 @@ export default function SplashPage() {
             delay={1.0}
           />
         </motion.div>
-
+        
         <motion.div
-          className="text-center relative z-10 mt-8"
-          initial={{ opacity: 0, y: 30 }}
+          className="text-center relative z-10"
+          initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.8 }}
+          transition={{ duration: 1, delay: 0.9 }}
         >
-          <div className="flex items-center justify-center">
-            <Link href="/trade" className="px-6 py-3 rounded-full bg-accent-gradient text-white font-medium hover:opacity-90 transition">
-              Get started
-            </Link>
+          <div className="flex justify-center gap-10 text-[--color-muted]">
+            <div className="text-center">
+              <p className="text-4xl font-light text-foreground mb-1">0.03%</p>
+              <p className="text-sm">Trading fees</p>
+            </div>
+            <div className="text-center">
+              <p className="text-4xl font-light text-foreground mb-1">∞</p>
+              <p className="text-sm">Scalability</p>
+            </div>
+            <div className="text-center">
+              <p className="text-4xl font-light text-foreground mb-1">100%</p>
+              <p className="text-sm">Decentralized</p>
+            </div>
           </div>
         </motion.div>
       </div>
