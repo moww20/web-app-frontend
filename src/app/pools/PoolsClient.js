@@ -26,15 +26,15 @@ export default function PoolsClient() {
   const rows = Array.from({ length: 6 }).map((_, i) => (
     <div
       key={i}
-      className="grid grid-cols-2 md:grid-cols-8 items-center px-4 py-3 hairline-b last:hairline-b-0 cursor-pointer hover:bg-white/3"
+      className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 items-center px-4 py-3 hairline-b last:hairline-b-0 cursor-pointer hover:bg-white/3"
       onClick={() => setIsDetailsOpen(true)}
     >
-      <div className="col-span-1 md:col-span-2 min-w-0">TokenA / TokenB</div>
-      <div className="hidden md:block min-w-0">$ —</div>
+      <div className="min-w-0">TokenA / TokenB</div>
+      <div className="hidden sm:block min-w-0">$ —</div>
       <div className="hidden md:block min-w-0">APR —</div>
-      <div className="hidden md:block min-w-0">Liquidity —</div>
-      <div className="hidden md:block min-w-0">Voting APR —</div>
-      <div className="col-span-1 md:col-span-2 flex items-center gap-2 justify-end" onClick={(e) => e.stopPropagation()}>
+      <div className="hidden lg:block min-w-0">Liquidity —</div>
+      <div className="hidden xl:block min-w-0">Voting APR —</div>
+      <div className="flex items-center gap-2 justify-end" onClick={(e) => e.stopPropagation()}>
         <button className={btnClass} onClick={(e) => { e.stopPropagation(); setIsSwapOpen(true) }}>Swap</button>
         <button className={btnClass} onClick={(e) => { e.stopPropagation(); setIsAddOpen(true) }}>+Liquidity</button>
         <button className={btnClass} onClick={(e) => { e.stopPropagation(); setIsBribeOpen(true) }}>Bribe</button>
@@ -50,13 +50,13 @@ export default function PoolsClient() {
       </div>
 
       <section className="glass hairline rounded-2xl overflow-hidden">
-        <div className="grid grid-cols-2 md:grid-cols-8 px-4 py-3 text-sm text-[--color-muted] hairline-b bg-white/5">
-          <div className="col-span-1 md:col-span-2">Pool</div>
-          <div className="hidden md:block">24h Volume</div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 px-4 py-3 text-sm text-[--color-muted] hairline-b bg-white/5">
+          <div>Pool</div>
+          <div className="hidden sm:block">24h Volume</div>
           <div className="hidden md:block">APR</div>
-          <div className="hidden md:block">Liquidity</div>
-          <div className="hidden md:block">Voting APR</div>
-          <div className="col-span-1 md:col-span-2">Actions</div>
+          <div className="hidden lg:block">Liquidity</div>
+          <div className="hidden xl:block">Voting APR</div>
+          <div>Actions</div>
         </div>
         {rows}
       </section>
