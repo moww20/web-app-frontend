@@ -2,7 +2,8 @@
 
 import { Canvas } from "@react-three/fiber"
 import { Environment } from "@react-three/drei"
-import { useRef } from "react"
+import { useRef, useEffect, useState, useMemo } from "react"
+import * as THREE from "three"
 import { useFrame } from "@react-three/fiber"
 import { motion } from "framer-motion"
 import Link from "next/link"
@@ -97,15 +98,134 @@ function SimpleCube({ position, color, id, cubeRefs }) {
 
 // Navbar moved to global layout
 
-function CubeScene() {
-  const cubeRefs = useRef({})
-  
+function ParticleLogoScene() {
+  const pointsRef = useRef(null)
+  const geometryRef = useRef(null)
+  const [ready, setReady] = useState(false)
+  const [mode, setMode] = useState('wander') // 'wander' | 'logo'
+  const particleCount = 9000
+  const bounds = useMemo(() => ({ x: 6.0, y: 3.0 }), [])
+
+  // Static buffers
+  const seedsRef = useRef(new Float32Array(particleCount))
+  const clusterRef = useRef(new Uint8Array(particleCount))
+  const logoTargetsRef = useRef(new Float32Array(particleCount * 3))
+
+  // Attractors for four "monsters"
+  const attractorsRef = useRef(
+    Array.from({ length: 4 }).map(() => ({
+      pos: [ (Math.random()*0.5), (Math.random()*0.5), 0 ],
+      vel: [ (Math.random()-0.5)*0.02, (Math.random()-0.5)*0.02, 0 ],
+    }))
+  )
+
+  useEffect(() => {
+    // Init geometry positions randomly
+    const positions = new Float32Array(particleCount * 3)
+    for (let i = 0; i < particleCount; i++) {
+      positions[3*i+0] = (Math.random()*2-1) * 1.5
+      positions[3*i+1] = (Math.random()*2-1) * 1.0
+      positions[3*i+2] = 0
+      seedsRef.current[i] = Math.random()*10 + 1
+      clusterRef.current[i] = i % 4
+    }
+    geometryRef.current.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    setReady(true)
+  }, [])
+
+  useEffect(() => {
+    // Load logo and compute target positions
+    const img = new Image()
+    img.src = '/monswaplogo.png'
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      const cvs = document.createElement('canvas')
+      const ctx = cvs.getContext('2d')
+      const targetW = 220
+      const scale = targetW / img.width
+      cvs.width = targetW
+      cvs.height = Math.max(1, Math.floor(img.height * scale))
+      ctx.drawImage(img, 0, 0, cvs.width, cvs.height)
+      const data = ctx.getImageData(0, 0, cvs.width, cvs.height).data
+      const pixels = []
+      for (let y = 0; y < cvs.height; y += 1) {
+        for (let x = 0; x < cvs.width; x += 1) {
+          const idx = (y * cvs.width + x) * 4
+          const a = data[idx + 3]
+          if (a > 64) {
+            // Map to world coords, center at (0,0)
+            const wx = (x / cvs.width - 0.5) * 4.5
+            const wy = (0.5 - y / cvs.height) * 2.2
+            pixels.push([wx, wy, 0])
+          }
+        }
+      }
+      // Assign logo targets by cycling through sampled pixels
+      for (let i = 0; i < particleCount; i++) {
+        const p = pixels[i % pixels.length] || [0,0,0]
+        logoTargetsRef.current[3*i+0] = p[0]
+        logoTargetsRef.current[3*i+1] = p[1]
+        logoTargetsRef.current[3*i+2] = p[2]
+      }
+    }
+  }, [particleCount])
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setMode(m => (m === 'wander' ? 'logo' : 'wander'))
+    }, 7000)
+    return () => clearInterval(id)
+  }, [])
+
+  useFrame((state, delta) => {
+    if (!ready || !geometryRef.current) return
+    const t = state.clock.elapsedTime
+    const pos = geometryRef.current.attributes.position.array
+    // Update attractors random-walk within bounds
+    for (const a of attractorsRef.current) {
+      a.pos[0] += a.vel[0]
+      a.pos[1] += a.vel[1]
+      // bounce
+      if (a.pos[0] > bounds.x) { a.pos[0] = bounds.x; a.vel[0] *= -1 }
+      if (a.pos[0] < -bounds.x) { a.pos[0] = -bounds.x; a.vel[0] *= -1 }
+      if (a.pos[1] > bounds.y) { a.pos[1] = bounds.y; a.vel[1] *= -1 }
+      if (a.pos[1] < -bounds.y) { a.pos[1] = -bounds.y; a.vel[1] *= -1 }
+      // slight drift
+      a.vel[0] += (Math.random()-0.5)*0.001
+      a.vel[1] += (Math.random()-0.5)*0.001
+      a.vel[0] = Math.max(-0.03, Math.min(0.03, a.vel[0]))
+      a.vel[1] = Math.max(-0.03, Math.min(0.03, a.vel[1]))
+    }
+
+    for (let i = 0; i < particleCount; i++) {
+      const ix = 3*i
+      let tx, ty, tz
+      if (mode === 'logo') {
+        tx = logoTargetsRef.current[ix]
+        ty = logoTargetsRef.current[ix+1]
+        tz = 0
+      } else {
+        const c = clusterRef.current[i]
+        const a = attractorsRef.current[c]
+        const s = seedsRef.current[i]
+        // noisy cloud around each monster
+        tx = a.pos[0] + Math.sin(t*0.8 + s)*0.6
+        ty = a.pos[1] + Math.cos(t*0.7 + s*0.7)*0.45
+        tz = 0
+      }
+      // smooth follow
+      pos[ix]   += (tx - pos[ix]) * 0.06
+      pos[ix+1] += (ty - pos[ix+1]) * 0.06
+      pos[ix+2] += (tz - pos[ix+2]) * 0.06
+    }
+    geometryRef.current.attributes.position.needsUpdate = true
+  })
+
   return (
-    <>
-      <SimpleCube position={[-2, 0, 0]} color="#eaeef3" id={0} cubeRefs={cubeRefs} />
-      <SimpleCube position={[2, 0, 0]} color="#d7dbe2" id={1} cubeRefs={cubeRefs} />
-      <SimpleCube position={[0, 2, 0]} color="#f5f7fa" id={2} cubeRefs={cubeRefs} />
-    </>
+    <points ref={pointsRef}>
+      <bufferGeometry ref={geometryRef} />
+      <pointsMaterial color="#e6e6e6" size={0.06} sizeAttenuation transparent opacity={0.9} />
+    </points>
   )
 }
 
@@ -198,7 +318,7 @@ export default function SplashPage() {
             {/* Subtle studio environment for better reflections */}
             <Environment preset="studio" intensity={0.5} />
 
-            <CubeScene />
+            <ParticleLogoScene />
 
             {/* Ground plane for shadows */}
             <mesh receiveShadow position={[0, -4, 0]} rotation={[-Math.PI / 2, 0, 0]}>
