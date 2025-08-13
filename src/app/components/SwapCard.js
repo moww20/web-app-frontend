@@ -135,6 +135,13 @@ export default function SwapCard() {
     setSettingsOpen((v) => !v)
   }
 
+  const setModeAndEmit = (next) => {
+    setMode(next)
+    try {
+      window.dispatchEvent(new CustomEvent("monswap:mode-change", { detail: next }))
+    } catch {}
+  }
+
   return (
     <motion.div
       className="glass hairline rounded-2xl w-full max-w-lg mx-auto overflow-hidden relative"
@@ -207,13 +214,13 @@ export default function SwapCard() {
               <span className="font-medium">View</span>
               <div className="inline-flex items-center rounded-full p-1 hairline">
                 <button
-                  onClick={() => setMode("basic")}
+                  onClick={() => setModeAndEmit("basic")}
                   className={`px-3 py-1.5 rounded-full text-sm ${mode === "basic" ? "bg-white/10" : "text-[--color-muted] hover:text-foreground"}`}
                 >
                   Basic
                 </button>
                 <button
-                  onClick={() => setMode("pro")}
+                  onClick={() => setModeAndEmit("pro")}
                   className={`px-3 py-1.5 rounded-full text-sm ${mode === "pro" ? "bg-accent-gradient text-white" : "text-[--color-muted] hover:text-foreground"}`}
                 >
                   Pro
@@ -254,11 +261,7 @@ export default function SwapCard() {
           />
         </div>
 
-        {mode === "pro" && (
-          <div className="mt-4 glass hairline rounded-2xl p-4 text-sm text-[--color-muted]">
-            Chart and advanced metrics (Pro mode) — coming soon.
-          </div>
-        )}
+        {/* Pro chart placeholder moved to TradeClient layout */}
 
         <button className="mt-4 w-full px-4 py-3 rounded-2xl bg-accent-gradient text-white font-medium hover:opacity-90 transition">
           {buyToken ? "Review Swap" : "Select a token"}
