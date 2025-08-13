@@ -13,7 +13,7 @@ export default function VotingDocsPage() {
 
         <h2>Overview</h2>
         <p>
-          Locking the protocol token (single stake) mints a vote‑escrowed position ("ve‑lock") that carries
+          Locking the protocol token (single stake) mints a vote‑escrowed position (&quot;ve‑lock&quot;) that carries
           <strong> voting power</strong>. Each epoch, you can allocate this power across pools to decide where emissions flow.
           Longer lock durations grant more power; your current power is shown on the dashboard and in the voting UI.
         </p>
