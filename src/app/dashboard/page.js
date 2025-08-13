@@ -7,6 +7,7 @@ export default function DashboardPage() {
   return (
     <main className="min-h-[80vh] max-w-7xl mx-auto px-6 py-24">
       <h1 className="text-3xl md:text-4xl font-light tracking-tight mb-8">Dashboard</h1>
+      <div className="origin-top opacity-0 translate-y-3 animate-[fadein_500ms_ease_forwards]">
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -73,6 +74,12 @@ export default function DashboardPage() {
         <h2 className="text-lg font-semibold mb-3">Voting Rewards</h2>
         <div className="text-sm text-[--color-muted]">No rewards found.</div>
       </section>
+      </div>
+      <style jsx global>{`
+        @keyframes fadein {
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </main>
   )
 }
