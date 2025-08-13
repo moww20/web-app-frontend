@@ -103,3 +103,13 @@ input[type='number'] {
   -moz-appearance: textfield;
   appearance: textfield;
 }
+
+/* Shared fade-in for page content (server-safe) */
+@keyframes fadein {
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadein-500 {
+  opacity: 0;
+  transform: translateY(0.75rem);
+  animation: fadein 500ms ease forwards;
+}
