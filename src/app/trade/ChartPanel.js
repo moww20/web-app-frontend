@@ -63,6 +63,25 @@ export default function ChartPanel({ height, useMock = true, pair = "ETH/USDT" }
       if (useMock) {
         const pts = generateMock24h()
         areaSeries.setData(pts)
+        // Add 10 date markers before the most recent day with prices
+        const lastTs = pts[pts.length - 1]?.time || Math.floor(Date.now() / 1000)
+        const day = 24 * 60 * 60
+        const markers = []
+        for (let i = 12; i > 2; i--) {
+          const t = lastTs - i * day
+          const idx = pts.findIndex(p => p.time >= t)
+          const y = idx > 0 ? pts[idx].value : pts[0].value
+          markers.push({
+            time: t,
+            position: 'belowBar',
+            color: '#6aa8ff',
+            shape: 'circle',
+            text: new Date(t * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ` $${y.toFixed(0)}`,
+          })
+        }
+        if (typeof areaSeries.setMarkers === 'function') {
+          areaSeries.setMarkers(markers)
+        }
         chart.timeScale().fitContent()
         return
       }
