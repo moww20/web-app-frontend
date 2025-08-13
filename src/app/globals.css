@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+/* Global design tokens tuned for a premium, minimal look */
+:root {
+  --background: #0b0b0f; /* deep neutral, not pure black */
+  --foreground: #e6e6e6; /* soft white */
+  --muted: #9aa0a6;      /* cool gray for secondary */
+  --hairline: rgba(255,255,255,0.08);
+  /* Red–Blue chrome accents */
+  --accent-red: #ff5563;
+  --accent-blue: #6aa8ff;
+  --accent: var(--accent-blue);
+  --accent-gradient: linear-gradient(90deg, var(--accent-red) 0%, var(--accent-blue) 100%);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-hairline: var(--hairline);
+  --color-accent: var(--accent);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "SF Pro Text", "SF Pro Display", var(--font-geist-sans), Inter, Arial, sans-serif;
+  --font-mono: var(--font-geist-mono);
+}
+
+html, body {
+  background: var(--background);
+  color: var(--foreground);
+  font-synthesis-weight: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--accent) 30%, transparent);
+  color: var(--foreground);
+}
+
+/* Hairline utilities for subtle separators */
+.hairline-b { border-bottom: 1px solid var(--hairline); }
+.hairline-t { border-top: 1px solid var(--hairline); }
+.hairline   { border: 1px solid var(--hairline); }
+
+/* Gradient text utility for premium headings */
+.text-shine {
+  background-image: linear-gradient(180deg, #ffffff 0%, #d6d7db 70%, #b8bac0 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Red–Blue gradient utilities */
+.bg-accent-gradient { background-image: var(--accent-gradient); }
+.text-accent-gradient {
+  background-image: var(--accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Subtle card backdrop */
+.glass {
+  background: color-mix(in oklab, #ffffff 4%, transparent);
+  -webkit-backdrop-filter: saturate(120%) blur(10px);
+  backdrop-filter: saturate(120%) blur(10px);
+}
+
+/* Input pill container highlight on focus within */
+.input-pill {
+  border: 1px solid var(--hairline);
+  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+.input-pill:focus-within {
+  border-color: color-mix(in oklab, var(--accent) 60%, transparent);
+}
+
+/* Remove inner focus ring for controls inside the pill */
+.input-pill :focus-visible {
+  outline: none;
+}
+
+/* Reduce default focus ring harshness */
+:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--accent) 60%, transparent);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Remove spinners from number inputs (Chrome, Safari, Edge, Firefox) */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
