@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { createChart, CrosshairMode } from "lightweight-charts"
+import { createChart, CrosshairMode, AreaSeries } from "lightweight-charts"
 
 export default function ChartPanel({ height }) {
   const containerRef = useRef(null)
@@ -26,7 +26,7 @@ export default function ChartPanel({ height }) {
     })
     chartRef.current = chart
 
-    const areaSeries = chart.addAreaSeries({
+    const areaSeries = chart.addSeries(AreaSeries, {
       topColor: "rgba(106,168,255,0.4)",
       bottomColor: "rgba(106,168,255,0.05)",
       lineColor: "#6aa8ff",
