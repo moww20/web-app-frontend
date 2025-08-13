@@ -103,7 +103,7 @@ function ParticleLogoScene() {
   const geometryRef = useRef(null)
   const [ready, setReady] = useState(false)
   const [mode, setMode] = useState('monsters') // 'monsters' | 'logo'
-  const particleCount = 9000
+  const particleCount = 16000
   const bounds = useMemo(() => ({ x: 6.0, y: 3.0 }), [])
 
   // Static buffers
@@ -145,7 +145,7 @@ function ParticleLogoScene() {
     img.onload = () => {
       const cvs = document.createElement('canvas')
       const ctx = cvs.getContext('2d')
-      const targetW = 220
+      const targetW = 320
       const scale = targetW / img.width
       cvs.width = targetW
       cvs.height = Math.max(1, Math.floor(img.height * scale))
@@ -158,8 +158,8 @@ function ParticleLogoScene() {
           const a = data[idx + 3]
           if (a > 64) {
             // Map to world coords, center at (0,0)
-            const wx = (x / cvs.width - 0.5) * 4.5
-            const wy = (0.5 - y / cvs.height) * 2.2
+            const wx = (x / cvs.width - 0.5) * 5.0
+            const wy = (0.5 - y / cvs.height) * 2.6
             pixels.push([wx, wy, 0])
           }
         }
@@ -167,8 +167,9 @@ function ParticleLogoScene() {
       // Assign logo targets by cycling through sampled pixels
       for (let i = 0; i < particleCount; i++) {
         const p = pixels[i % pixels.length] || [0,0,0]
-        logoTargetsRef.current[3*i+0] = p[0]
-        logoTargetsRef.current[3*i+1] = p[1]
+        // add micro jitter to reduce banding
+        logoTargetsRef.current[3*i+0] = p[0] + (Math.random()-0.5)*0.02
+        logoTargetsRef.current[3*i+1] = p[1] + (Math.random()-0.5)*0.02
         logoTargetsRef.current[3*i+2] = p[2]
       }
     }
@@ -183,7 +184,7 @@ function ParticleLogoScene() {
       const cols = 4
       const cellW = Math.floor(img.width / cols)
       const cellH = img.height
-      const targetW = 140 // scale each monster width to ~140px before sampling
+      const targetW = 220 // scale each monster width larger for more detail
       const scale = targetW / cellW
       const cvs = document.createElement('canvas')
       const ctx = cvs.getContext('2d')
@@ -195,15 +196,15 @@ function ParticleLogoScene() {
         ctx.drawImage(img, m * cellW, 0, cellW, cellH, 0, 0, cvs.width, cvs.height)
         const data = ctx.getImageData(0, 0, cvs.width, cvs.height).data
         const pts = []
-        // Subsample for performance
-        const step = 2
+        // Higher resolution sampling
+        const step = 1
         for (let y = 0; y < cvs.height; y += step) {
           for (let x = 0; x < cvs.width; x += step) {
             const idx = (y * cvs.width + x) * 4
             const a = data[idx + 3]
             if (a > 64) {
-              const nx = (x / cvs.width - 0.5) * 2.2 // normalize to ~[-1.1,1.1]
-              const ny = (0.5 - y / cvs.height) * 2.2
+              const nx = (x / cvs.width - 0.5) * 2.6 // normalize wider
+              const ny = (0.5 - y / cvs.height) * 2.6
               pts.push([nx, ny, 0])
             }
           }
@@ -273,9 +274,9 @@ function ParticleLogoScene() {
         }
       }
       // smooth follow
-      pos[ix]   += (tx - pos[ix]) * 0.08
-      pos[ix+1] += (ty - pos[ix+1]) * 0.08
-      pos[ix+2] += (tz - pos[ix+2]) * 0.08
+      pos[ix]   += (tx - pos[ix]) * 0.10
+      pos[ix+1] += (ty - pos[ix+1]) * 0.10
+      pos[ix+2] += (tz - pos[ix+2]) * 0.10
     }
     geometryRef.current.attributes.position.needsUpdate = true
   })
@@ -283,7 +284,7 @@ function ParticleLogoScene() {
   return (
     <points ref={pointsRef}>
       <bufferGeometry ref={geometryRef} />
-      <pointsMaterial color="#e6e6e6" size={0.06} sizeAttenuation transparent opacity={0.9} />
+      <pointsMaterial color="#e6e6e6" size={0.035} sizeAttenuation transparent opacity={0.95} />
     </points>
   )
 }
