@@ -53,7 +53,7 @@ export default function Navbar() {
           <SearchBar />
         </div>
         <div className="flex items-center justify-end gap-6">
-          <button className="inline-flex max-[519px]:hidden px-4 py-2 rounded-full text-sm text-foreground/90 hover:text-foreground transition-colors">Docs</button>
+          <Link href="/docs" className={`${linkClass('/docs')} max-[519px]:hidden`}>Docs</Link>
           <div className="hidden lg:block">
             <ConnectButton />
           </div>
@@ -107,7 +107,7 @@ export default function Navbar() {
                     <Link href="/pools" className={linkClass('/pools')}>Pools</Link>
                     <Link href="/dashboard" className={linkClass('/dashboard')}>Dashboard</Link>
                     <Link href="/vote" className={linkClass('/vote')}>Vote</Link>
-                    <button className="mt-2 px-4 py-2 rounded-full text-sm text-foreground/90 hover:text-foreground hover:bg-white/5 transition-colors text-left">Docs</button>
+                    <Link href="/docs" className={linkClass('/docs')}>Docs</Link>
                     <div className="pt-2">
                       <ConnectButton />
                     </div>

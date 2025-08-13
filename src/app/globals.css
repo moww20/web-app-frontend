@@ -93,6 +93,15 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Docs content width + typography */
+.docs-prose {
+  max-width: 80ch;
+  line-height: 1.7;
+}
+.docs-prose p { margin: 0.75rem 0; }
+.docs-prose ul { margin: 0.75rem 0 0.75rem 1.25rem; }
+.docs-prose li { margin: 0.25rem 0; }
+
 /* Remove spinners from number inputs (Chrome, Safari, Edge, Firefox) */
 input[type='number']::-webkit-outer-spin-button,
 input[type='number']::-webkit-inner-spin-button {
@@ -112,4 +121,22 @@ input[type='number'] {
   opacity: 0;
   transform: translateY(0.75rem);
   animation: fadein 500ms ease forwards;
+}
+
+/* Docs: code blocks without syntax plugin */
+pre, code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+pre {
+  background: #141414;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 1rem;
+  overflow: auto;
+}
+code {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  padding: 0.125rem 0.375rem;
 }
