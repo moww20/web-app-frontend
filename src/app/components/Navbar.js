@@ -76,7 +76,7 @@ export default function Navbar() {
               onClick={() => setMobileOpen(false)}
             />
             <motion.div
-              className="fixed inset-y-0 right-0 z-[61] w-80 max-w-[85vw] bg-[#0e0e0e] hairline-l sm:hidden p-4"
+              className="fixed inset-y-0 right-0 z-[61] w-80 max-w-[85vw] bg-[#0e0e0e] bg-opacity-100 hairline-l sm:hidden p-4"
               initial={{ x: 320 }}
               animate={{ x: 0 }}
               exit={{ x: 320 }}
