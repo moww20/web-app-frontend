@@ -80,7 +80,6 @@ export default function ChartPanel({ height, useMock = true }) {
     chart.applyOptions({ height: height || 520 })
 
     return () => {
-      ro.disconnect()
       chart.remove()
     }
   }, [height])
