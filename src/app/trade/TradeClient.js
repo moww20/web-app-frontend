@@ -8,6 +8,9 @@ export default function TradeClient() {
   const [mode, setMode] = useState("basic")
   const swapRef = useRef(null)
   const [swapHeight, setSwapHeight] = useState(0)
+  const [swapWidth, setSwapWidth] = useState(0)
+  const CHART_WIDTH = 520
+  const GAP = 24
 
   useEffect(() => {
     const onMode = (e) => setMode(e.detail)
@@ -20,10 +23,12 @@ export default function TradeClient() {
     const el = swapRef.current
     const ro = new ResizeObserver(() => {
       setSwapHeight(el.offsetHeight)
+      setSwapWidth(el.offsetWidth)
     })
     ro.observe(el)
     setSwapHeight(el.offsetHeight)
-    const onResize = () => setSwapHeight(el.offsetHeight)
+    setSwapWidth(el.offsetWidth)
+    const onResize = () => { setSwapHeight(el.offsetHeight); setSwapWidth(el.offsetWidth) }
     window.addEventListener('resize', onResize)
     return () => {
       ro.disconnect()
@@ -33,7 +38,10 @@ export default function TradeClient() {
 
   return (
     <div className="mx-auto" style={{ maxWidth: 1120 }}>
-      <div className="relative">
+      <div
+        className="relative"
+        style={{ width: mode === 'pro' ? Math.min(1120, (CHART_WIDTH + GAP + (swapWidth || 512))) : (swapWidth || undefined) }}
+      >
         <AnimatePresence initial={false}>
           {mode === "pro" && (
             <motion.div
@@ -43,7 +51,7 @@ export default function TradeClient() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -24 }}
               transition={{ duration: 0.35 }}
-              style={{ width: 520, height: swapHeight || undefined }}
+              style={{ width: CHART_WIDTH, height: swapHeight || undefined }}
             >
               <div className="glass hairline rounded-2xl p-4 h-full text-sm text-[--color-muted]">
                 Chart (placeholder)
@@ -54,7 +62,7 @@ export default function TradeClient() {
         <motion.div
           key="swap"
           initial={false}
-          animate={mode === "pro" ? { x: 540 } : { x: 0 }}
+          animate={mode === "pro" ? { x: CHART_WIDTH + GAP } : { x: 0 }}
           transition={{ type: "spring", stiffness: 200, damping: 26 }}
         >
           <div ref={swapRef}>
