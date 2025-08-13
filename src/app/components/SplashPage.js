@@ -9,7 +9,7 @@ import { motion } from "framer-motion"
 import Link from "next/link"
 // Navbar is now global, no local connect button needed here
 
-function SimpleCube({ position, color, id, cubeRefs, visible = true }) {
+function SimpleCube({ position, color, id, cubeRefs, visible = true, fadeRef }) {
   const meshRef = useRef()
   const posRef = useRef([...position])
   const velocityRef = useRef([
@@ -90,25 +90,43 @@ function SimpleCube({ position, color, id, cubeRefs, visible = true }) {
       }
       
       meshRef.current.position.set(pos[0], pos[1], pos[2])
+      // Fade/scale during disintegration
+      const k = fadeRef?.current ?? 1
+      meshRef.current.scale.setScalar(0.9 + 0.1 * k)
+      if (meshRef.current.material) {
+        meshRef.current.material.opacity = k
+        meshRef.current.material.transparent = true
+      }
     }
   })
   
   return (
     <mesh ref={meshRef} position={position} castShadow receiveShadow visible={visible}>
       <boxGeometry args={[1.2, 1.2, 1.2]} />
-      <meshStandardMaterial color={color} metalness={1} roughness={0.08} envMapIntensity={1.1} />
+      <meshPhysicalMaterial color={color} metalness={0.8} roughness={0.2} clearcoat={0.3} envMapIntensity={1.0} />
     </mesh>
   )
 }
 
-function CubeScene({ visible = true }) {
+function CubeScene({ visible = true, phase = 'cubes', phaseStart = 0, explodeDur = 0.5 }) {
   const cubeRefs = useRef({})
+  const fadeRef = useRef(1)
+  useFrame(({ clock }) => {
+    if (!visible) return
+    if (phase === 'morph') {
+      const elapsed = Math.max(0, clock.getElapsedTime() - phaseStart)
+      const f = THREE.MathUtils.clamp(1 - elapsed / explodeDur, 0, 1)
+      fadeRef.current = f
+    } else {
+      fadeRef.current = 1
+    }
+  })
   
   return (
     <>
-      <SimpleCube position={[-2, 0, 0]} color="#eaeef3" id={0} cubeRefs={cubeRefs} visible={visible} />
-      <SimpleCube position={[2, 0, 0]} color="#d7dbe2" id={1} cubeRefs={cubeRefs} visible={visible} />
-      <SimpleCube position={[0, 2, 0]} color="#f5f7fa" id={2} cubeRefs={cubeRefs} visible={visible} />
+      <SimpleCube position={[-2, 0, 0]} color="#eaeef3" id={0} cubeRefs={cubeRefs} visible={visible} fadeRef={fadeRef} />
+      <SimpleCube position={[2, 0, 0]} color="#d7dbe2" id={1} cubeRefs={cubeRefs} visible={visible} fadeRef={fadeRef} />
+      <SimpleCube position={[0, 2, 0]} color="#f5f7fa" id={2} cubeRefs={cubeRefs} visible={visible} fadeRef={fadeRef} />
     </>
   )
 }
@@ -259,13 +277,17 @@ function useEffectOnce(callback) {
 
 function DiceToTextScene() {
   const [phase, setPhase] = useState('cubes')
+  const phaseStartRef = useRef(0)
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime()
-    if (phase === 'cubes' && t > 2.0) setPhase('morph')
+    if (phase === 'cubes' && t > 2.0) {
+      setPhase('morph')
+      phaseStartRef.current = t
+    }
   })
   return (
     <>
-      <CubeScene visible={phase === 'cubes'} />
+      <CubeScene visible={true} phase={phase} phaseStart={phaseStartRef.current} />
       <MorphingParticles phase={phase} />
     </>
   )
