@@ -102,7 +102,7 @@ function ParticleLogoScene() {
   const pointsRef = useRef(null)
   const geometryRef = useRef(null)
   const [ready, setReady] = useState(false)
-  const [mode, setMode] = useState('wander') // 'wander' | 'logo'
+  const [mode, setMode] = useState('monsters') // 'monsters' | 'logo'
   const particleCount = 9000
   const bounds = useMemo(() => ({ x: 6.0, y: 3.0 }), [])
 
@@ -110,6 +110,10 @@ function ParticleLogoScene() {
   const seedsRef = useRef(new Float32Array(particleCount))
   const clusterRef = useRef(new Uint8Array(particleCount))
   const logoTargetsRef = useRef(new Float32Array(particleCount * 3))
+  // Per-cluster monster shape offsets (local space around [0,0])
+  const monsterShapesRef = useRef([[], [], [], []])
+  // Map each particle to an index in its cluster's shape array
+  const shapeIndexRef = useRef(new Uint32Array(particleCount))
 
   // Attractors for four "monsters"
   const attractorsRef = useRef(
@@ -171,9 +175,55 @@ function ParticleLogoScene() {
   }, [particleCount])
 
   useEffect(() => {
+    // Load 4 monsters from a spritesheet 'pixelmonsters.png' (4 columns)
+    const img = new Image()
+    img.src = '/pixelmonsters.png'
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      const cols = 4
+      const cellW = Math.floor(img.width / cols)
+      const cellH = img.height
+      const targetW = 140 // scale each monster width to ~140px before sampling
+      const scale = targetW / cellW
+      const cvs = document.createElement('canvas')
+      const ctx = cvs.getContext('2d')
+      cvs.width = Math.max(1, Math.floor(cellW * scale))
+      cvs.height = Math.max(1, Math.floor(cellH * scale))
+      const clusters = [[], [], [], []]
+      for (let m = 0; m < 4; m++) {
+        ctx.clearRect(0,0,cvs.width,cvs.height)
+        ctx.drawImage(img, m * cellW, 0, cellW, cellH, 0, 0, cvs.width, cvs.height)
+        const data = ctx.getImageData(0, 0, cvs.width, cvs.height).data
+        const pts = []
+        // Subsample for performance
+        const step = 2
+        for (let y = 0; y < cvs.height; y += step) {
+          for (let x = 0; x < cvs.width; x += step) {
+            const idx = (y * cvs.width + x) * 4
+            const a = data[idx + 3]
+            if (a > 64) {
+              const nx = (x / cvs.width - 0.5) * 2.2 // normalize to ~[-1.1,1.1]
+              const ny = (0.5 - y / cvs.height) * 2.2
+              pts.push([nx, ny, 0])
+            }
+          }
+        }
+        clusters[m] = pts
+      }
+      monsterShapesRef.current = clusters
+      // Assign a shape index per particle within its cluster
+      for (let i = 0; i < particleCount; i++) {
+        const c = clusterRef.current[i]
+        const pts = monsterShapesRef.current[c]
+        shapeIndexRef.current[i] = pts.length ? (i % pts.length) : 0
+      }
+    }
+  }, [particleCount])
+
+  useEffect(() => {
     const id = setInterval(() => {
-      setMode(m => (m === 'wander' ? 'logo' : 'wander'))
-    }, 7000)
+      setMode(m => (m === 'monsters' ? 'logo' : 'monsters'))
+    }, 8000)
     return () => clearInterval(id)
   }, [])
 
@@ -208,15 +258,24 @@ function ParticleLogoScene() {
         const c = clusterRef.current[i]
         const a = attractorsRef.current[c]
         const s = seedsRef.current[i]
-        // noisy cloud around each monster
-        tx = a.pos[0] + Math.sin(t*0.8 + s)*0.6
-        ty = a.pos[1] + Math.cos(t*0.7 + s*0.7)*0.45
-        tz = 0
+        const pts = monsterShapesRef.current[c]
+        if (pts && pts.length) {
+          const [ox, oy] = pts[ shapeIndexRef.current[i] % pts.length ]
+          // Base on monster local shape offset, plus a subtle wobble
+          tx = a.pos[0] + ox + Math.sin(t*1.4 + s) * 0.05
+          ty = a.pos[1] + oy + Math.cos(t*1.2 + s*0.7) * 0.05
+          tz = 0
+        } else {
+          // fallback to cloud if shape not ready
+          tx = a.pos[0] + Math.sin(t*0.8 + s)*0.6
+          ty = a.pos[1] + Math.cos(t*0.7 + s*0.7)*0.45
+          tz = 0
+        }
       }
       // smooth follow
-      pos[ix]   += (tx - pos[ix]) * 0.06
-      pos[ix+1] += (ty - pos[ix+1]) * 0.06
-      pos[ix+2] += (tz - pos[ix+2]) * 0.06
+      pos[ix]   += (tx - pos[ix]) * 0.08
+      pos[ix+1] += (ty - pos[ix+1]) * 0.08
+      pos[ix+2] += (tz - pos[ix+2]) * 0.08
     }
     geometryRef.current.attributes.position.needsUpdate = true
   })
