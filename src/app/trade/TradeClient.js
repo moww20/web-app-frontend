@@ -1,11 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import SwapCard from "../components/SwapCard"
 
 export default function TradeClient() {
   const [mode, setMode] = useState("basic")
+  const swapRef = useRef(null)
+  const [swapHeight, setSwapHeight] = useState(0)
 
   useEffect(() => {
     const onMode = (e) => setMode(e.detail)
@@ -13,9 +15,25 @@ export default function TradeClient() {
     return () => window.removeEventListener("monswap:mode-change", onMode)
   }, [])
 
+  useEffect(() => {
+    if (!swapRef.current) return
+    const el = swapRef.current
+    const ro = new ResizeObserver(() => {
+      setSwapHeight(el.offsetHeight)
+    })
+    ro.observe(el)
+    setSwapHeight(el.offsetHeight)
+    const onResize = () => setSwapHeight(el.offsetHeight)
+    window.addEventListener('resize', onResize)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', onResize)
+    }
+  }, [mode])
+
   return (
     <div className="mx-auto" style={{ maxWidth: 1120 }}>
-      <div className="relative min-h-[520px]">
+      <div className="relative">
         <AnimatePresence initial={false}>
           {mode === "pro" && (
             <motion.div
@@ -25,7 +43,7 @@ export default function TradeClient() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -24 }}
               transition={{ duration: 0.35 }}
-              style={{ width: 520 }}
+              style={{ width: 520, height: swapHeight || undefined }}
             >
               <div className="glass hairline rounded-2xl p-4 h-full text-sm text-[--color-muted]">
                 Chart (placeholder)
@@ -39,7 +57,9 @@ export default function TradeClient() {
           animate={mode === "pro" ? { x: 540 } : { x: 0 }}
           transition={{ type: "spring", stiffness: 200, damping: 26 }}
         >
-          <SwapCard />
+          <div ref={swapRef}>
+            <SwapCard />
+          </div>
         </motion.div>
       </div>
     </div>
