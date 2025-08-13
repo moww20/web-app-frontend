@@ -154,12 +154,16 @@ function MorphingParticles({ text = "MONSWAP", phase = "cubes" }) {
 
   const initialPositionsRef = useRef([])
   const velocitiesRef = useRef([])
+  const rotationsRef = useRef([])
+  const scalesRef = useRef([])
   const startedRef = useRef(false)
   const startTimeRef = useRef(0)
 
   useEffectOnce(() => {
     const initial = []
     const velocities = []
+    const rots = []
+    const scales = []
     for (let i = 0; i < count; i++) {
       const center = cubeCenters[i % cubeCenters.length]
       const p = new THREE.Vector3(
@@ -174,9 +178,17 @@ function MorphingParticles({ text = "MONSWAP", phase = "cubes" }) {
         (Math.random() - 0.5) * 0.6,
       )
       velocities.push(v)
+      rots.push(new THREE.Euler(
+        (Math.random() - 0.5) * 0.8,
+        (Math.random() - 0.5) * 1.2,
+        (Math.random() - 0.5) * 0.8
+      ))
+      scales.push(THREE.MathUtils.lerp(0.9, 1.4, Math.random()))
     }
     initialPositionsRef.current = initial
     velocitiesRef.current = velocities
+    rotationsRef.current = rots
+    scalesRef.current = scales
   })
 
   useFrame((state, delta) => {
@@ -214,8 +226,11 @@ function MorphingParticles({ text = "MONSWAP", phase = "cubes" }) {
         pos = lerpPos
       }
       dummy.position.copy(pos)
-      const s = exploded ? (t < totalDur ? THREE.MathUtils.lerp(0.012, 0.016, Math.min(1, t / 0.6)) : 0.016) : 0.012
-      dummy.scale.setScalar(s)
+      const baseS = exploded ? (t < totalDur ? THREE.MathUtils.lerp(0.012, 0.016, Math.min(1, t / 0.6)) : 0.016) : 0.012
+      const shardScale = baseS * (scalesRef.current[i] || 1)
+      dummy.scale.setScalar(shardScale)
+      const r = rotationsRef.current[i]
+      if (r) dummy.rotation.set(r.x, r.y + morphK * 0.3, r.z)
       dummy.updateMatrix()
       meshRef.current.setMatrixAt(i, dummy.matrix)
     }
@@ -223,10 +238,12 @@ function MorphingParticles({ text = "MONSWAP", phase = "cubes" }) {
   })
 
   return (
-    <instancedMesh ref={meshRef} args={[null, null, count]}>
-      <sphereGeometry args={[1, 8, 8]} />
-      <meshStandardMaterial color="#e6e6e6" metalness={0.2} roughness={0.4} />
-    </instancedMesh>
+    <group rotation={[-0.18, 0.12, 0]}>
+      <instancedMesh ref={meshRef} args={[null, null, count]}>
+        <boxGeometry args={[1, 0.35, 0.35]} />
+        <meshPhysicalMaterial color="#dfe5ee" metalness={1} roughness={0.12} clearcoat={0.6} clearcoatRoughness={0.25} envMapIntensity={1.4} />
+      </instancedMesh>
+    </group>
   )
 }
 
