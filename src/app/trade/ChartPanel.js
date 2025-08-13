@@ -24,6 +24,7 @@ export default function ChartPanel({ height }) {
       timeScale: { borderColor: "rgba(255,255,255,0.08)" },
       handleScroll: true,
       handleScale: true,
+      autoSize: true,
     })
     chartRef.current = chart
 
@@ -48,13 +49,7 @@ export default function ChartPanel({ height }) {
     }
     load()
 
-    const onResize = () => {
-      const w = containerRef.current?.clientWidth || 520
-      chart.applyOptions({ height: height || 520, width: w })
-    }
-    onResize()
-    const ro = new ResizeObserver(onResize)
-    ro.observe(containerRef.current)
+    chart.applyOptions({ height: height || 520 })
 
     return () => {
       ro.disconnect()
@@ -62,7 +57,13 @@ export default function ChartPanel({ height }) {
     }
   }, [height])
 
-  return <div ref={containerRef} className="glass hairline rounded-2xl p-3" style={{ height }} />
+  return (
+    <div
+      ref={containerRef}
+      className="glass hairline rounded-2xl overflow-hidden relative p-3"
+      style={{ height, width: "100%" }}
+    />
+  )
 }
 
 
