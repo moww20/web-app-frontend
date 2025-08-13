@@ -133,6 +133,7 @@ function CubeScene({ visible = true, phase = 'cubes', phaseStart = 0, explodeDur
 
 function MorphingParticles({ text = "MONSWAP", phase = "cubes" }) {
   const meshRef = useRef()
+  const matRef = useRef()
   const count = 1800
 
   const cubeCenters = useMemo(() => [
@@ -191,17 +192,21 @@ function MorphingParticles({ text = "MONSWAP", phase = "cubes" }) {
     const scales = []
     for (let i = 0; i < count; i++) {
       const center = cubeCenters[i % cubeCenters.length]
+      // Sample within cube volume (approx 1.2 size) for clear origin from cubes
       const p = new THREE.Vector3(
-        center.x + (Math.random() - 0.5) * 0.8,
-        center.y + (Math.random() - 0.5) * 0.8,
-        center.z + (Math.random() - 0.5) * 0.2,
+        center.x + (Math.random() * 1.2 - 0.6),
+        center.y + (Math.random() * 1.2 - 0.6),
+        center.z + (Math.random() * 1.2 - 0.6),
       )
       initial.push(p)
-      const v = new THREE.Vector3(
-        (Math.random() - 0.5) * 1.8,
-        (Math.random() - 0.5) * 1.8,
+      // Initial velocity: outward from the cube center with jitter
+      const dir = p.clone().sub(center).normalize()
+      const jitter = new THREE.Vector3(
+        (Math.random() - 0.5) * 0.6,
+        (Math.random() - 0.5) * 0.6,
         (Math.random() - 0.5) * 0.6,
       )
+      const v = dir.multiplyScalar(3.2).add(jitter)
       velocities.push(v)
       rots.push(new THREE.Euler(
         (Math.random() - 0.5) * 0.8,
@@ -231,7 +236,7 @@ function MorphingParticles({ text = "MONSWAP", phase = "cubes" }) {
       startTimeRef.current = now
     }
     const t = Math.max(0, now - startTimeRef.current)
-    const explodeDur = 0.5
+    const explodeDur = 0.9
     const morphStart = explodeDur
     const morphDur = 1.6
     const totalDur = explodeDur + morphDur
@@ -265,13 +270,31 @@ function MorphingParticles({ text = "MONSWAP", phase = "cubes" }) {
       meshRef.current.setMatrixAt(i, dummy.matrix)
     }
     meshRef.current.instanceMatrix.needsUpdate = true
+
+    // Particle visibility/metallic feel over time
+    if (matRef.current) {
+      let alpha = 0
+      if (exploded) {
+        alpha = t < 0.2 ? THREE.MathUtils.smootherstep(t, 0, 0.2) : 1
+      }
+      matRef.current.transparent = true
+      matRef.current.opacity = THREE.MathUtils.clamp(alpha, 0, 1)
+      // Increase reflectivity as it morphs into text
+      const metal = THREE.MathUtils.lerp(0.6, 1.0, morphK)
+      const rough = THREE.MathUtils.lerp(0.35, 0.12, morphK)
+      const envI = THREE.MathUtils.lerp(0.9, 1.4, morphK)
+      matRef.current.metalness = metal
+      matRef.current.roughness = rough
+      matRef.current.clearcoat = 0.6
+      matRef.current.envMapIntensity = envI
+    }
   })
 
   return (
     <group rotation={[-0.18, 0.12, 0]}>
       <instancedMesh ref={meshRef} args={[null, null, count]}>
         <boxGeometry args={[1, 0.35, 0.35]} />
-        <meshPhysicalMaterial color="#dfe5ee" metalness={1} roughness={0.12} clearcoat={0.6} clearcoatRoughness={0.25} envMapIntensity={1.4} />
+        <meshPhysicalMaterial ref={matRef} color="#dfe5ee" metalness={0.6} roughness={0.35} clearcoat={0.3} clearcoatRoughness={0.25} envMapIntensity={0.9} />
       </instancedMesh>
     </group>
   )
@@ -299,7 +322,7 @@ function DiceToTextScene() {
   })
   return (
     <>
-      <CubeScene visible={true} phase={phase} phaseStart={phaseStartRef.current} />
+      <CubeScene visible={true} phase={phase} phaseStart={phaseStartRef.current} explodeDur={0.9} />
       <MorphingParticles phase={phase} />
     </>
   )
