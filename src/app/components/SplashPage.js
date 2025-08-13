@@ -108,25 +108,75 @@ function SimpleCube({ position, color, id, cubeRefs, visible = true, fadeRef }) 
   )
 }
 
-function CubeScene({ visible = true, phase = 'cubes', phaseStart = 0, explodeDur = 0.5 }) {
-  const cubeRefs = useRef({})
+function PhysicsCubes({ visible = true, phase = 'cubes', phaseStart = 0, explodeDur = 0.5 }) {
   const fadeRef = useRef(1)
+  const cubesRef = useRef([
+    { pos: new THREE.Vector3(-2, 0, 0), vel: new THREE.Vector3(0.06, 0.04, 0), color: '#eaeef3' },
+    { pos: new THREE.Vector3(2, 0, 0), vel: new THREE.Vector3(-0.05, 0.03, 0), color: '#d7dbe2' },
+    { pos: new THREE.Vector3(0, 2, 0), vel: new THREE.Vector3(0.04, -0.05, 0), color: '#f5f7fa' },
+  ])
+  const bounds = { left: -4.5, right: 4.5, bottom: -2.5, top: 2.5 }
+
   useFrame(({ clock }) => {
     if (!visible) return
+    // Fade as morph starts
     if (phase === 'morph') {
       const elapsed = Math.max(0, clock.getElapsedTime() - phaseStart)
-      const f = THREE.MathUtils.clamp(1 - elapsed / explodeDur, 0, 1)
-      fadeRef.current = f
+      fadeRef.current = THREE.MathUtils.clamp(1 - elapsed / explodeDur, 0, 1)
     } else {
       fadeRef.current = 1
     }
+    // Integrate movement with simple collisions
+    const cubes = cubesRef.current
+    // Wall collisions
+    for (const c of cubes) {
+      c.pos.add(c.vel)
+      // Friction
+      c.vel.multiplyScalar(0.999)
+      if (c.pos.x > bounds.right || c.pos.x < bounds.left) {
+        c.vel.x = -c.vel.x
+        c.pos.x = THREE.MathUtils.clamp(c.pos.x, bounds.left, bounds.right)
+      }
+      if (c.pos.y > bounds.top || c.pos.y < bounds.bottom) {
+        c.vel.y = -c.vel.y
+        c.pos.y = THREE.MathUtils.clamp(c.pos.y, bounds.bottom, bounds.top)
+      }
+    }
+    // Pairwise collisions (elastic-ish)
+    for (let i = 0; i < cubes.length; i++) {
+      for (let j = i + 1; j < cubes.length; j++) {
+        const a = cubes[i], b = cubes[j]
+        const dx = a.pos.x - b.pos.x
+        const dy = a.pos.y - b.pos.y
+        const dist = Math.hypot(dx, dy)
+        const minDist = 1.5
+        if (dist < minDist && dist > 0.0001) {
+          const nx = dx / dist, ny = dy / dist
+          const overlap = minDist - dist
+          a.pos.x += nx * overlap * 0.5
+          a.pos.y += ny * overlap * 0.5
+          b.pos.x -= nx * overlap * 0.5
+          b.pos.y -= ny * overlap * 0.5
+          const va = a.vel.clone(), vb = b.vel.clone()
+          const rel = va.sub(vb)
+          const sep = rel.x * nx + rel.y * ny
+          if (sep < 0) {
+            const impulse = -1.1 * sep
+            a.vel.x += nx * impulse
+            a.vel.y += ny * impulse
+            b.vel.x -= nx * impulse
+            b.vel.y -= ny * impulse
+          }
+        }
+      }
+    }
   })
-  
+
   return (
     <>
-      <SimpleCube position={[-2, 0, 0]} color="#eaeef3" id={0} cubeRefs={cubeRefs} visible={visible} fadeRef={fadeRef} />
-      <SimpleCube position={[2, 0, 0]} color="#d7dbe2" id={1} cubeRefs={cubeRefs} visible={visible} fadeRef={fadeRef} />
-      <SimpleCube position={[0, 2, 0]} color="#f5f7fa" id={2} cubeRefs={cubeRefs} visible={visible} fadeRef={fadeRef} />
+      {cubesRef.current.map((c, idx) => (
+        <SimpleCube key={idx} id={idx} position={[c.pos.x, c.pos.y, c.pos.z]} color={c.color} cubeRefs={{ current: {} }} visible={visible} fadeRef={fadeRef} />
+      ))}
     </>
   )
 }
@@ -322,7 +372,7 @@ function DiceToTextScene() {
   })
   return (
     <>
-      <CubeScene visible={true} phase={phase} phaseStart={phaseStartRef.current} explodeDur={0.9} />
+      <PhysicsCubes visible={true} phase={phase} phaseStart={phaseStartRef.current} explodeDur={0.9} />
       <MorphingParticles phase={phase} />
     </>
   )
