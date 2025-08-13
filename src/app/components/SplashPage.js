@@ -155,7 +155,7 @@ export default function SplashPage() {
             transition={{ duration: 1, delay: 0.3 }}
           >
             <p className="mt-4 text-lg md:text-xl text-[--color-muted] max-w-2xl mx-auto leading-relaxed">
-              Ultra-fast, deeply liquid, and truly decentralized. Built for the Monad ecosystem.
+              Ultra-fast, deeply liquid, and truly decentralized. <br />Built for the Monad ecosystem.
             </p>
           </motion.div>
         </motion.div>
