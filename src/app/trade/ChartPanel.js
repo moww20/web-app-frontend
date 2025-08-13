@@ -87,7 +87,7 @@ export default function ChartPanel({ height, useMock = true, pair = "ETH/USDT" }
   }, [plotHeight])
 
   return (
-    <div ref={wrapperRef} className="glass hairline rounded-2xl overflow-hidden relative" style={{ height, width: "100%" }}>
+    <div ref={wrapperRef} className="glass hairline rounded-2xl overflow-hidden relative" style={{ height: height || 520, width: "100%" }}>
       <div className="px-3 pt-3 pb-1 text-sm text-[--color-muted]">{pair}</div>
       <div ref={innerRef} className="px-3 pb-3" style={{ height: plotHeight }} />
     </div>
