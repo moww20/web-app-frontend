@@ -15,7 +15,7 @@ export default function TradeClient() {
 
   return (
     <div className="mx-auto" style={{ maxWidth: 1120 }}>
-      <div className="relative">
+      <div className="relative min-h-[520px]">
         <AnimatePresence initial={false}>
           {mode === "pro" && (
             <motion.div
@@ -27,7 +27,7 @@ export default function TradeClient() {
               transition={{ duration: 0.35 }}
               style={{ width: 520 }}
             >
-              <div className="glass hairline rounded-2xl p-4 h-[520px] text-sm text-[--color-muted]">
+              <div className="glass hairline rounded-2xl p-4 h-full text-sm text-[--color-muted]">
                 Chart (placeholder)
               </div>
             </motion.div>
