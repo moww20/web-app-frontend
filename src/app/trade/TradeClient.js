@@ -47,7 +47,7 @@ export default function TradeClient() {
               initial={{ opacity: 0, width: 0, marginRight: 0 }}
               animate={{ opacity: 1, width: CHART_WIDTH, marginRight: 24 }}
               exit={{ opacity: 0, width: 0, marginRight: 0 }}
-              transition={{ duration: 0.35, ease: 'easeInOut' }}
+              transition={{ duration: 0.55, ease: 'easeInOut' }}
               style={{ height: swapHeight || undefined }}
             >
               <div className="glass hairline rounded-2xl p-4 h-full text-sm text-[--color-muted]">
@@ -59,7 +59,7 @@ export default function TradeClient() {
         <motion.div
           key="swap"
           layout
-          transition={{ type: "spring", stiffness: 260, damping: 30 }}
+          transition={{ type: "spring", stiffness: 170, damping: 26 }}
         >
           <div ref={swapRef} className="inline-block">
             <SwapCard />
