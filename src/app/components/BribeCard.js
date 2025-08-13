@@ -13,9 +13,20 @@ export default function BribeCard({
   available = "—",
   initialToken = "RAWR",
   usdPreview = "—",
+  tokenPrices = null,
+  tokenBalances = null,
 } = {}) {
   const [token, setToken] = useState(initialToken)
   const [amount, setAmount] = useState("")
+  const formatUsd = (val) => {
+    const n = Number(val)
+    if (!isFinite(n)) return "$0"
+    return `$${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+  }
+  const getPrice = (sym) => (tokenPrices && sym ? (typeof tokenPrices[sym] === 'number' ? tokenPrices[sym] : 0) : 0)
+  const getBalance = (sym) => (tokenBalances && sym ? (typeof tokenBalances[sym] === 'number' ? tokenBalances[sym] : 0) : null)
+  const derivedUsd = tokenPrices ? formatUsd((Number(amount||0)||0) * getPrice(token)) : null
+  const derivedAvail = tokenBalances ? getBalance(token) : null
 
   return (
     <motion.div
@@ -55,7 +66,7 @@ export default function BribeCard({
 
       <div className="h-px w-full bg-[var(--color-hairline)]" />
       {/* Availability */}
-      <div className="px-4 pt-3 pb-1 text-right text-sm text-[--color-muted]">Available {available} {token}</div>
+      <div className="px-4 pt-3 pb-1 text-right text-sm text-[--color-muted]">Available {derivedAvail != null ? derivedAvail : available} {token}</div>
 
       {/* Amount input */}
       <div className="px-4">
@@ -71,7 +82,7 @@ export default function BribeCard({
             onChange={(e) => setAmount(e.target.value)}
             className="bg-transparent outline-none text-2xl w-full ml-3 text-right"
           />
-          <div className="ml-3 text-right text-sm text-[--color-muted] min-w-[5rem]">{usdPreview}</div>
+          <div className="ml-3 text-right text-sm text-[--color-muted] min-w-[5rem]">{derivedUsd ?? usdPreview}</div>
         </div>
       </div>
 

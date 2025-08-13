@@ -15,33 +15,92 @@ function TokenButton({ symbol, onClick }) {
   )
 }
 
-function AmountRow({ label, amount, setAmount, token, onSelectToken }) {
+function AmountRow({ label, amount, setAmount, token, onSelectToken, usdPreview, isMenuOpen = false, tokens = [], onPickToken = () => {}, onCloseMenu = () => {}, balanceLabel, onMax, readOnly = false }) {
   return (
     <div className="bg-[#141414] hairline rounded-2xl p-4 input-pill">
       <div className="flex items-center justify-between">
         <div className="text-sm text-[--color-muted]">{label}</div>
-        <TokenButton symbol={token} onClick={onSelectToken} />
+        <div className="relative inline-block">
+          <TokenButton symbol={token} onClick={onSelectToken} />
+          {isMenuOpen && (
+            <div className="absolute right-0 mt-2 z-20 w-40 bg-[#141414] hairline rounded-xl shadow-xl p-1">
+              <div className="grid gap-1">
+                {tokens.map((sym) => (
+                  <button key={sym} className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5" onClick={() => onPickToken(sym)}>{sym}</button>
+                ))}
+                <button className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 text-[--color-muted]" onClick={onCloseMenu}>Close</button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
+      {balanceLabel && (
+        <div className="mt-1 flex items-center justify-end text-xs text-[--color-muted]">
+          <span>{balanceLabel}</span>
+          {onMax && (
+            <button className="ml-2 px-2 py-0.5 rounded-full hairline hover:bg-white/5" onClick={onMax}>Max</button>
+          )}
+        </div>
+      )}
       <div className="mt-2 flex items-end justify-between">
         <input
           inputMode="decimal"
           pattern="^[0-9]*[.,]?[0-9]*$"
           placeholder="0"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          onChange={(e) => { if (!readOnly) setAmount(e.target.value) }}
+          readOnly={readOnly}
           className="bg-transparent outline-none text-4xl font-light w-full"
         />
-        <div className="ml-3 text-right text-sm text-[--color-muted] min-w-[5rem]">$0</div>
+        <div className="ml-3 text-right text-sm text-[--color-muted] min-w-[5rem]">{usdPreview ?? "$0"}</div>
       </div>
     </div>
   )
 }
 
-export default function AddLiquidityCard() {
-  const [tokenA, setTokenA] = useState("")
-  const [tokenB, setTokenB] = useState("")
+export default function AddLiquidityCard({
+  tokenPrices = null,
+  tokenBalances = null,
+  defaultTokenA = "",
+  defaultTokenB = "",
+} = {}) {
+  const [tokenA, setTokenA] = useState(defaultTokenA)
+  const [tokenB, setTokenB] = useState(defaultTokenB)
   const [amountA, setAmountA] = useState("")
   const [amountB, setAmountB] = useState("")
+  const [menu, setMenu] = useState(null) // 'A' | 'B' | null
+
+  const formatUsd = (val) => {
+    const n = Number(val)
+    if (!isFinite(n) || !tokenPrices) return "$0"
+    return `$${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+  }
+  const getPrice = (sym) => (tokenPrices && sym ? (typeof tokenPrices[sym] === 'number' ? tokenPrices[sym] : 0) : 0)
+  const getBalance = (sym) => (tokenBalances && sym ? (typeof tokenBalances[sym] === 'number' ? tokenBalances[sym] : 0) : 0)
+  const tokens = tokenPrices ? Object.keys(tokenPrices) : []
+  const usdA = formatUsd((Number(amountA||0)||0) * getPrice(tokenA))
+  const usdB = formatUsd((Number(amountB||0)||0) * getPrice(tokenB))
+
+  const deriveAmountB = (a, symA, symB) => {
+    const v = Number(a)
+    if (!isFinite(v) || v <= 0) return ""
+    const pA = getPrice(symA)
+    const pB = getPrice(symB)
+    if (pA <= 0 || pB <= 0) return ""
+    const usd = v * pA
+    const out = usd / pB
+    return String(Number(out.toFixed(6)))
+  }
+
+  // Auto-calc Token B to match Token A's value
+  if (tokenPrices) {
+    // lightweight sync without extra render loops
+    const nextB = deriveAmountB(amountA, tokenA, tokenB)
+    if (nextB !== amountB) {
+      // setAmountB only when it actually changes
+      setTimeout(() => setAmountB(nextB), 0)
+    }
+  }
 
   return (
     <motion.div
@@ -53,7 +112,20 @@ export default function AddLiquidityCard() {
       <div className="px-4 pt-3 pb-4">
         <div className="text-sm text-[--color-muted] mb-2">Add Liquidity</div>
 
-        <AmountRow label="Token A" amount={amountA} setAmount={setAmountA} token={tokenA} onSelectToken={() => {}} />
+        <AmountRow
+          label="Token A"
+          amount={amountA}
+          setAmount={setAmountA}
+          token={tokenA}
+          onSelectToken={() => { if (tokens.length) setMenu('A') }}
+          isMenuOpen={menu==='A'}
+          tokens={tokens}
+          onPickToken={(sym) => { setTokenA(sym); setMenu(null) }}
+          onCloseMenu={() => setMenu(null)}
+          usdPreview={usdA}
+          balanceLabel={tokenBalances ? `Balance: ${getBalance(tokenA)} ${tokenA}` : undefined}
+          onMax={tokenBalances ? (() => setAmountA(String(getBalance(tokenA)))) : undefined}
+        />
 
         <div className="flex items-center justify-center my-2">
           <svg className="w-4 h-4 text-[--color-muted]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -61,7 +133,21 @@ export default function AddLiquidityCard() {
           </svg>
         </div>
 
-        <AmountRow label="Token B" amount={amountB} setAmount={setAmountB} token={tokenB} onSelectToken={() => {}} />
+        <AmountRow
+          label="Token B"
+          amount={amountB}
+          setAmount={setAmountB}
+          token={tokenB}
+          onSelectToken={() => { if (tokens.length) setMenu('B') }}
+          isMenuOpen={menu==='B'}
+          tokens={tokens}
+          onPickToken={(sym) => { setTokenB(sym); setMenu(null) }}
+          onCloseMenu={() => setMenu(null)}
+          usdPreview={usdB}
+          balanceLabel={tokenBalances ? `Balance: ${getBalance(tokenB)} ${tokenB}` : undefined}
+          onMax={tokenBalances ? (() => setAmountB(String(getBalance(tokenB)))) : undefined}
+          readOnly
+        />
 
         {/* Fee tier placeholder */}
         <div className="mt-3 text-sm text-[--color-muted]">Fee tier: —</div>

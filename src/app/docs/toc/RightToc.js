@@ -1,10 +1,12 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { usePathname } from "next/navigation"
 
 export default function RightToc() {
   const [headings, setHeadings] = useState([])
   const [active, setActive] = useState(null)
+  const pathname = usePathname()
 
   useEffect(() => {
     const nodes = Array.from(document.querySelectorAll("main h2, main h3"))
@@ -25,8 +27,11 @@ export default function RightToc() {
       setActive(id)
     }
     window.addEventListener('hashchange', onHash)
-    return () => observer.disconnect()
-  }, [])
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('hashchange', onHash)
+    }
+  }, [pathname])
 
   if (headings.length === 0) return null
 

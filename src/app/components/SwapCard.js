@@ -71,40 +71,70 @@ function TokenButton({ label, symbol, onClick }) {
   )
 }
 
-function AmountRow({ title, amount, setAmount, token, onSelectToken, className = "" }) {
+function AmountRow({ title, amount, setAmount, token, onSelectToken, usdPreview, className = "", isMenuOpen = false, tokens = [], onPickToken = () => {}, onCloseMenu = () => {}, balanceLabel, onMax, readOnly = false }) {
   return (
     <div className={`bg-[#141414] hairline rounded-2xl p-4 input-pill ${className}`}>
       <div className="flex items-center justify-between">
         <div className="text-sm text-[--color-muted]">{title}</div>
-        <TokenButton symbol={token} onClick={onSelectToken} />
+        <div className="relative inline-block">
+          <TokenButton symbol={token} onClick={onSelectToken} />
+          {isMenuOpen && (
+            <div className="absolute right-0 mt-2 z-20 w-40 bg-[#141414] hairline rounded-xl shadow-xl p-1">
+              <div className="grid gap-1">
+                {tokens.map((sym) => (
+                  <button key={sym}
+                          className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5"
+                          onClick={() => onPickToken(sym)}
+                  >{sym}</button>
+                ))}
+                <button className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 text-[--color-muted]" onClick={onCloseMenu}>Close</button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
+      {balanceLabel && (
+        <div className="mt-1 flex items-center justify-end text-xs text-[--color-muted]">
+          <span>{balanceLabel}</span>
+          {onMax && (
+            <button className="ml-2 px-2 py-0.5 rounded-full hairline hover:bg-white/5" onClick={onMax}>Max</button>
+          )}
+        </div>
+      )}
       <div className="mt-2 flex items-end justify-between">
         <input
           inputMode="decimal"
           pattern="^[0-9]*[.,]?[0-9]*$"
           placeholder="0"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          onChange={(e) => { if (!readOnly) setAmount(e.target.value) }}
+          readOnly={readOnly}
           className="bg-transparent outline-none text-4xl font-light w-full"
         />
-        <div className="ml-3 text-right text-sm text-[--color-muted] min-w-[5rem]">$0</div>
+        <div className="ml-3 text-right text-sm text-[--color-muted] min-w-[5rem]">{usdPreview ?? "$0"}</div>
       </div>
     </div>
   )
 }
 
-export default function SwapCard() {
+export default function SwapCard({
+  tokenPrices = null,
+  defaultSellToken = "ETH",
+  defaultBuyToken = "",
+  tokenBalances = null,
+} = {}) {
   const [tab, setTab] = useState("Swap")
   const [sellAmount, setSellAmount] = useState("")
   const [buyAmount, setBuyAmount] = useState("")
-  const [sellToken, setSellToken] = useState("ETH")
-  const [buyToken, setBuyToken] = useState("")
+  const [sellToken, setSellToken] = useState(defaultSellToken)
+  const [buyToken, setBuyToken] = useState(defaultBuyToken)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [maxSlippage, setMaxSlippage] = useState("5")
   const [slippageAuto, setSlippageAuto] = useState(true)
   const [deadlineMins, setDeadlineMins] = useState("5")
   const [mode, setMode] = useState("basic")
   const settingsRef = useRef(null)
+  const [tokenMenu, setTokenMenu] = useState(null) // 'sell' | 'buy' | null
 
   const SETTINGS_KEY = "monswap.settings"
 
@@ -156,6 +186,44 @@ export default function SwapCard() {
       window.dispatchEvent(new CustomEvent("monswap:mode-change", { detail: next }))
     } catch {}
   }
+
+  const getPrice = (symbol) => {
+    if (!symbol) return 0
+    if (!tokenPrices) return 0
+    const p = tokenPrices[symbol]
+    return typeof p === 'number' ? p : 0
+  }
+  const getBalance = (symbol) => {
+    if (!symbol || !tokenBalances) return 0
+    const b = tokenBalances[symbol]
+    return typeof b === 'number' ? b : 0
+  }
+  const formatUsd = (val) => {
+    if (!val || isNaN(val)) return "$0"
+    const n = Number(val)
+    if (!isFinite(n)) return "$0"
+    return `$${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+  }
+
+  const tokens = tokenPrices ? Object.keys(tokenPrices) : []
+  const sellUsd = formatUsd((Number(sellAmount || 0) || 0) * getPrice(sellToken))
+  const buyUsd = formatUsd((Number(buyAmount || 0) || 0) * getPrice(buyToken))
+
+  // Derive buy amount from sell amount using mock prices (no fees/impact)
+  const deriveBuyAmount = (sellAmt, sellSym, buySym) => {
+    const s = Number(sellAmt)
+    if (!isFinite(s) || s <= 0) return ""
+    const pSell = getPrice(sellSym)
+    const pBuy = getPrice(buySym)
+    if (pSell <= 0 || pBuy <= 0) return ""
+    const usd = s * pSell
+    const out = usd / pBuy
+    return String(Number(out.toFixed(6)))
+  }
+
+  useEffect(() => {
+    setBuyAmount(deriveBuyAmount(sellAmount, sellToken, buyToken))
+  }, [sellAmount, sellToken, buyToken])
 
   return (
     <motion.div
@@ -236,7 +304,14 @@ export default function SwapCard() {
             amount={sellAmount}
             setAmount={setSellAmount}
             token={sellToken}
-            onSelectToken={() => {}}
+            onSelectToken={() => { if (tokens.length) setTokenMenu('sell') }}
+            usdPreview={sellUsd}
+            isMenuOpen={tokenMenu==='sell'}
+            tokens={tokens}
+            onPickToken={(sym) => { setSellToken(sym); setTokenMenu(null) }}
+            onCloseMenu={() => setTokenMenu(null)}
+            balanceLabel={tokenBalances ? `Balance: ${getBalance(sellToken)} ${sellToken}` : undefined}
+            onMax={tokenBalances ? (() => setSellAmount(String(getBalance(sellToken)))) : undefined}
           />
 
           <button
@@ -255,11 +330,18 @@ export default function SwapCard() {
             amount={buyAmount}
             setAmount={setBuyAmount}
             token={buyToken}
-            onSelectToken={() => {}}
+            onSelectToken={() => { if (tokens.length) setTokenMenu('buy') }}
+            usdPreview={buyUsd}
+            isMenuOpen={tokenMenu==='buy'}
+            tokens={tokens}
+            onPickToken={(sym) => { setBuyToken(sym); setTokenMenu(null) }}
+            onCloseMenu={() => setTokenMenu(null)}
+            balanceLabel={tokenBalances ? `Balance: ${getBalance(buyToken)} ${buyToken}` : undefined}
+            readOnly
           />
         </div>
 
-        {/* Pro chart placeholder moved to TradeClient layout */}
+        {/* Token selection handled via dropdowns on each row */}
 
         <button className="mt-4 w-full px-4 py-3 rounded-2xl bg-accent-gradient text-white font-medium hover:opacity-90 transition">
           {buyToken ? "Review Swap" : "Select a token"}

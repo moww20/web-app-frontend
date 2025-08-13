@@ -35,7 +35,7 @@ export default function DocsSidebar() {
 
   return (
     <aside className="w-64 max-w-[70vw] shrink-0">
-      <div className="sticky top-20">
+      <div>
         <div className="mb-4 text-sm text-[--color-muted]">Docs</div>
         <div className="grid gap-2">
           {docsItems.map((section) => (

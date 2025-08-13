@@ -25,21 +25,21 @@ export default function DocsShell({ children }) {
       <a href="#docs-main" className="fixed left-2 -top-10 focus:top-2 z-[100] px-3 py-2 rounded-full bg-white/10 backdrop-blur hairline">Skip to content</a>
       <ScrollRestorer />
       <div className="flex gap-8">
-        <div className="hidden xl:block"><DocsSidebar /></div>
+        <div className="hidden xl:block sticky top-[9rem] self-start max-h-[calc(100vh-9rem)] overflow-auto"><DocsSidebar /></div>
         <div className="flex-1 min-w-0">
           <div className="xl:hidden mb-4">
             <button className="px-3 py-2 rounded-full hairline hover:bg-white/5" onClick={() => setMobileOpen(true)}>Docs menu</button>
           </div>
           <Breadcrumbs />
           <HeadingAnchors />
-          <div id="docs-main">
+          <div id="docs-main" className="origin-top animate-fadein-500">
             {children}
           </div>
           <div className="border-t border-white/10 mt-8 pt-6">
             <DocNav />
           </div>
         </div>
-        <div className="hidden xl:block"><RightToc /></div>
+        <div className="hidden xl:block sticky top-[9rem] self-start max-h-[calc(100vh-9rem)] overflow-auto"><RightToc /></div>
       </div>
 
       {mobileOpen && (
