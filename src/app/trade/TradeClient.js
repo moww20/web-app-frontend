@@ -38,17 +38,17 @@ export default function TradeClient() {
 
   return (
     <div className="mx-auto" style={{ maxWidth: 1120 }}>
-      <div className={`relative flex ${mode === 'pro' ? 'justify-center md:justify-start' : 'justify-center'}`}>
+      <motion.div layout className={`relative flex ${mode === 'pro' ? 'justify-center md:justify-start' : 'justify-center'}`}>
         <AnimatePresence initial={false}>
           {mode === "pro" && (
             <motion.div
               key="chart"
-              className="hidden md:block mr-6"
-              initial={{ opacity: 0, x: -24 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -24 }}
-              transition={{ duration: 0.35 }}
-              style={{ width: CHART_WIDTH, height: swapHeight || undefined }}
+              className="hidden md:block"
+              initial={{ opacity: 0, width: 0, marginRight: 0 }}
+              animate={{ opacity: 1, width: CHART_WIDTH, marginRight: 24 }}
+              exit={{ opacity: 0, width: 0, marginRight: 0 }}
+              transition={{ duration: 0.35, ease: 'easeInOut' }}
+              style={{ height: swapHeight || undefined }}
             >
               <div className="glass hairline rounded-2xl p-4 h-full text-sm text-[--color-muted]">
                 Chart (placeholder)
@@ -58,15 +58,14 @@ export default function TradeClient() {
         </AnimatePresence>
         <motion.div
           key="swap"
-          initial={false}
-          animate={{ x: 0 }}
-          transition={{ type: "spring", stiffness: 200, damping: 26 }}
+          layout
+          transition={{ type: "spring", stiffness: 260, damping: 30 }}
         >
           <div ref={swapRef} className="inline-block">
             <SwapCard />
           </div>
         </motion.div>
-      </div>
+      </motion.div>
     </div>
   )
 }
