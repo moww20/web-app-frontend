@@ -51,7 +51,7 @@ export default function TradeClient() {
               exit={{ opacity: 0, width: 0, marginRight: 0 }}
               transition={{ duration: 0.55, ease: 'easeInOut' }}
             >
-              <ChartPanel height={swapHeight || 520} />
+              <ChartPanel height={swapHeight || 520} useMock={true} />
             </motion.div>
           )}
         </AnimatePresence>
