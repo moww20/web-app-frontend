@@ -9,102 +9,51 @@ import { motion } from "framer-motion"
 import Link from "next/link"
 // Navbar is now global, no local connect button needed here
 
-function SimpleCube({ position, color, id, cubeRefs, visible = true, fadeRef }) {
-  const meshRef = useRef()
-  const posRef = useRef([...position])
-  const velocityRef = useRef([
-    (Math.random() - 0.5) * 0.08,
-    (Math.random() - 0.5) * 0.08,
-    0
-  ])
-  
-  // Register this cube's ref
-  cubeRefs.current[id] = {
-    position: posRef,
-    velocity: velocityRef,
-    mesh: meshRef
-  }
-  
-  useFrame(() => {
-    if (!visible) {
-      if (meshRef.current) meshRef.current.visible = false
-      return
+function SimpleCube({ controlledPosition, color, visible = true, fadeRef, dustCount = 220 }) {
+  const instRef = useRef()
+  const matRef = useRef()
+  const offsets = useMemo(() => {
+    const arr = []
+    for (let i = 0; i < dustCount; i++) {
+      arr.push(new THREE.Vector3(
+        (Math.random() * 1.2 - 0.6),
+        (Math.random() * 1.2 - 0.6),
+        (Math.random() * 1.2 - 0.6),
+      ))
     }
-    if (meshRef.current) meshRef.current.visible = true
-    if (meshRef.current) {
-      meshRef.current.rotation.x += 0.02
-      meshRef.current.rotation.y += 0.02
-      
-      const pos = posRef.current
-      const velocity = velocityRef.current
-      
-      // Check collisions with other cubes
-      Object.keys(cubeRefs.current).forEach(otherId => {
-        otherId = parseInt(otherId)
-        if (otherId !== id && otherId > id) { // Only check each pair once
-          const otherCube = cubeRefs.current[otherId]
-          if (otherCube && otherCube.position) {
-            const otherPos = otherCube.position.current
-            const otherVel = otherCube.velocity.current
-            
-            const dx = pos[0] - otherPos[0]
-            const dy = pos[1] - otherPos[1]
-            const distance = Math.sqrt(dx * dx + dy * dy)
-            const minDistance = 1.5
-            
-            if (distance < minDistance && distance > 0.01) {
-              // Force separation first
-              const overlap = minDistance - distance + 0.1 // Add buffer
-              const normalX = dx / distance
-              const normalY = dy / distance
-              
-              // Push cubes apart more aggressively
-              const pushForce = overlap * 0.6
-              pos[0] += normalX * pushForce
-              pos[1] += normalY * pushForce
-              otherPos[0] -= normalX * pushForce
-              otherPos[1] -= normalY * pushForce
-              
-              // Simple velocity reversal with randomization
-              velocity[0] = normalX * Math.abs(velocity[0]) * 1.2 + (Math.random() - 0.5) * 0.02
-              velocity[1] = normalY * Math.abs(velocity[1]) * 1.2 + (Math.random() - 0.5) * 0.02
-              otherVel[0] = -normalX * Math.abs(otherVel[0]) * 1.2 + (Math.random() - 0.5) * 0.02
-              otherVel[1] = -normalY * Math.abs(otherVel[1]) * 1.2 + (Math.random() - 0.5) * 0.02
-            }
-          }
-        }
-      })
-      
-      // Update position
-      pos[0] += velocity[0]
-      pos[1] += velocity[1]
-      
-      // Bounce off edges with randomization
-      if (pos[0] > 4.5 || pos[0] < -4.5) {
-        velocity[0] = -velocity[0] * 0.9 + (Math.random() - 0.5) * 0.02
-        pos[0] = pos[0] > 4.5 ? 4.5 : -4.5
-      }
-      if (pos[1] > 2.5 || pos[1] < -2.5) {
-        velocity[1] = -velocity[1] * 0.9 + (Math.random() - 0.5) * 0.02
-        pos[1] = pos[1] > 2.5 ? 2.5 : -2.5
-      }
-      
-      meshRef.current.position.set(pos[0], pos[1], pos[2])
-      // Fade/scale during disintegration
+    return arr
+  }, [dustCount])
+
+  useFrame(({ clock }) => {
+    if (!instRef.current) return
+    const pos = controlledPosition || [0, 0, 0]
+    const t = clock.getElapsedTime()
+    const twinkle = (i) => (Math.sin(t * 2 + i) + 1) * 0.5
+    const dummy = new THREE.Object3D()
+    for (let i = 0; i < offsets.length; i++) {
+      const o = offsets[i]
+      dummy.position.set(pos[0] + o.x, pos[1] + o.y, pos[2] + o.z)
+      const s = 0.06 + twinkle(i) * 0.02
+      dummy.scale.setScalar(s)
+      dummy.rotation.set(0, 0, 0)
+      dummy.updateMatrix()
+      instRef.current.setMatrixAt(i, dummy.matrix)
+    }
+    instRef.current.instanceMatrix.needsUpdate = true
+    // Fade during morph
+    if (matRef.current) {
       const k = fadeRef?.current ?? 1
-      meshRef.current.scale.setScalar(0.9 + 0.1 * k)
-      if (meshRef.current.material) {
-        meshRef.current.material.opacity = k
-        meshRef.current.material.transparent = true
-      }
+      matRef.current.opacity = k
+      matRef.current.transparent = true
     }
   })
-  
+
+  if (!visible) return null
   return (
-    <mesh ref={meshRef} position={position} castShadow receiveShadow visible={visible}>
-      <boxGeometry args={[1.2, 1.2, 1.2]} />
-      <meshPhysicalMaterial color={color} metalness={0.8} roughness={0.2} clearcoat={0.3} envMapIntensity={1.0} />
-    </mesh>
+    <instancedMesh ref={instRef} args={[null, null, offsets.length]}>
+      <sphereGeometry args={[1, 6, 6]} />
+      <meshStandardMaterial ref={matRef} color={color} metalness={0.2} roughness={0.8} opacity={0.95} />
+    </instancedMesh>
   )
 }
 
@@ -175,7 +124,7 @@ function PhysicsCubes({ visible = true, phase = 'cubes', phaseStart = 0, explode
   return (
     <>
       {cubesRef.current.map((c, idx) => (
-        <SimpleCube key={idx} id={idx} position={[c.pos.x, c.pos.y, c.pos.z]} color={c.color} cubeRefs={{ current: {} }} visible={visible} fadeRef={fadeRef} />
+        <SimpleCube key={idx} controlledPosition={[c.pos.x, c.pos.y, c.pos.z]} color={c.color} visible={visible} fadeRef={fadeRef} />
       ))}
     </>
   )
