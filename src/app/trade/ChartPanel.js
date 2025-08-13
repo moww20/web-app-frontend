@@ -1,23 +1,25 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { createChart, CrosshairMode, AreaSeries } from "lightweight-charts"
 
-export default function ChartPanel({ height, useMock = true }) {
-  const containerRef = useRef(null)
+export default function ChartPanel({ height, useMock = true, pair = "ETH/USDT" }) {
+  const wrapperRef = useRef(null)
   const chartRef = useRef(null)
+  const innerRef = useRef(null)
+  const plotHeight = useMemo(() => Math.max(260, (height || 520) - 48), [height])
 
   useEffect(() => {
-    if (!containerRef.current) return
-    const chart = createChart(containerRef.current, {
+    if (!innerRef.current) return
+    const chart = createChart(innerRef.current, {
       layout: {
-        background: { color: "#111114" },
+        background: { color: "transparent" },
         textColor: "#c8c8c8",
         attributionLogo: false,
       },
       grid: {
-        vertLines: { color: "rgba(255,255,255,0.06)" },
-        horzLines: { color: "rgba(255,255,255,0.06)" },
+        vertLines: { color: "transparent" },
+        horzLines: { color: "transparent" },
       },
       crosshair: { mode: CrosshairMode.Normal },
       rightPriceScale: { borderColor: "rgba(255,255,255,0.08)" },
@@ -77,19 +79,18 @@ export default function ChartPanel({ height, useMock = true }) {
     }
     load()
 
-    chart.applyOptions({ height: height || 520 })
+    chart.applyOptions({ height: plotHeight })
 
     return () => {
       chart.remove()
     }
-  }, [height])
+  }, [plotHeight])
 
   return (
-    <div
-      ref={containerRef}
-      className="glass hairline rounded-2xl overflow-hidden relative p-3"
-      style={{ height, width: "100%" }}
-    />
+    <div ref={wrapperRef} className="glass hairline rounded-2xl overflow-hidden relative" style={{ height, width: "100%" }}>
+      <div className="px-3 pt-3 pb-1 text-sm text-[--color-muted]">{pair}</div>
+      <div ref={innerRef} className="px-3 pb-3" style={{ height: plotHeight }} />
+    </div>
   )
 }
 

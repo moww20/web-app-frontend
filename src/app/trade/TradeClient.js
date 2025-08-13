@@ -51,7 +51,7 @@ export default function TradeClient() {
               exit={{ opacity: 0, width: 0, marginRight: 0 }}
               transition={{ duration: 0.55, ease: 'easeInOut' }}
             >
-              <ChartPanel height={swapHeight || 520} useMock={true} />
+              <ChartPanel height={(swapHeight || 520) - 20} useMock={true} pair="ETH/USDT" />
             </motion.div>
           )}
         </AnimatePresence>
