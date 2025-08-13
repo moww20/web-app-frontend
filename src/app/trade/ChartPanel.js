@@ -102,7 +102,33 @@ export default function ChartPanel({ height, useMock = true, pair = "ETH/USDT" }
 
     chart.applyOptions({ height: plotHeight })
 
+    const onRange = (ev) => {
+      const { hours } = ev.detail || {}
+      if (!hours) return
+      const ts = Math.floor(Date.now() / 1000)
+      chart.timeScale().setVisibleRange({ from: ts - hours * 3600, to: ts })
+    }
+    const onScale = (ev) => {
+      const { mode } = ev.detail || {}
+      const ps = chart.priceScale('right')
+      if (mode === 'linear') ps.applyOptions({ mode: PriceScaleMode.Normal })
+      if (mode === 'log') ps.applyOptions({ mode: PriceScaleMode.Logarithmic })
+    }
+    const onPriceMode = (ev) => {
+      const { kind } = ev.detail || {}
+      const ps = chart.priceScale('right')
+      if (kind === 'price') ps.applyOptions({ mode: PriceScaleMode.Normal })
+      if (kind === 'percent') ps.applyOptions({ mode: PriceScaleMode.Percentage })
+      if (kind === 'index') ps.applyOptions({ mode: PriceScaleMode.IndexedTo100 })
+    }
+    window.addEventListener('monswap:chart-range', onRange)
+    window.addEventListener('monswap:chart-scale', onScale)
+    window.addEventListener('monswap:chart-priceMode', onPriceMode)
+
     return () => {
+      window.removeEventListener('monswap:chart-range', onRange)
+      window.removeEventListener('monswap:chart-scale', onScale)
+      window.removeEventListener('monswap:chart-priceMode', onPriceMode)
       chart.remove()
     }
   }, [plotHeight])
@@ -111,68 +137,6 @@ export default function ChartPanel({ height, useMock = true, pair = "ETH/USDT" }
     <div ref={wrapperRef} className="glass hairline rounded-2xl overflow-hidden relative" style={{ height: height || 520, width: "100%" }}>
       <div className="px-3 pt-3 pb-1 text-sm text-[--color-muted]">{pair}</div>
       <div ref={innerRef} className="px-3 pb-3" style={{ height: plotHeight }} />
-      {/* Controls */}
-      <div className="px-3 pb-3 flex items-center justify-between text-xs">
-        <div className="inline-flex items-center gap-1 hairline rounded-full px-2 py-1">
-          {[
-            { label: "1H", hours: 1 },
-            { label: "1D", hours: 24 },
-            { label: "1W", hours: 24 * 7 },
-            { label: "1M", hours: 24 * 30 },
-            { label: "1Y", hours: 24 * 365 },
-          ].map((r) => (
-            <button
-              key={r.label}
-              className="px-2 py-1 rounded-full hover:bg-white/5"
-              onClick={() => {
-                const chart = chartRef.current
-                if (!chart || !seriesRef.current) return
-                const ts = Math.floor(Date.now() / 1000)
-                const from = ts - r.hours * 60 * 60
-                chart.timeScale().setVisibleRange({ from, to: ts })
-              }}
-            >
-              {r.label}
-            </button>
-          ))}
-        </div>
-        <div className="inline-flex items-center gap-2">
-          <div className="inline-flex items-center hairline rounded-full">
-            <button
-              className="px-2 py-1 rounded-l-full hover:bg-white/5"
-              title="Linear"
-              onClick={() => chartRef.current?.priceScale('right').applyOptions({ mode: PriceScaleMode.Normal })}
-            >
-              ↗
-            </button>
-            <button
-              className="px-2 py-1 rounded-r-full hover:bg-white/5"
-              title="Log"
-              onClick={() => chartRef.current?.priceScale('right').applyOptions({ mode: PriceScaleMode.Logarithmic })}
-            >
-              ∿
-            </button>
-          </div>
-          <div className="inline-flex items-center hairline rounded-full px-2 py-1">
-            <select
-              className="bg-transparent text-xs outline-none"
-              onChange={(e) => {
-                const v = e.target.value
-                const chart = chartRef.current
-                if (!chart) return
-                if (v === 'price') chart.priceScale('right').applyOptions({ mode: PriceScaleMode.Normal })
-                if (v === 'percent') chart.priceScale('right').applyOptions({ mode: PriceScaleMode.Percentage })
-                if (v === 'index') chart.priceScale('right').applyOptions({ mode: PriceScaleMode.IndexedTo100 })
-              }}
-              defaultValue="price"
-            >
-              <option value="price">Price</option>
-              <option value="percent">%</option>
-              <option value="index">Index</option>
-            </select>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }

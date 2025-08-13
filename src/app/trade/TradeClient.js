@@ -65,6 +65,40 @@ export default function TradeClient() {
           </div>
         </motion.div>
       </motion.div>
+      {mode === 'pro' && (
+        <div className="mt-3 flex items-center justify-between text-xs">
+          <div className="inline-flex items-center gap-1 hairline rounded-full px-2 py-1">
+            {[
+              { label: '1H', hours: 1 },
+              { label: '1D', hours: 24 },
+              { label: '1W', hours: 24*7 },
+              { label: '1M', hours: 24*30 },
+              { label: '1Y', hours: 24*365 },
+            ].map(r => (
+              <button key={r.label} className="px-2 py-1 rounded-full hover:bg-white/5"
+                onClick={() => window.dispatchEvent(new CustomEvent('monswap:chart-range', { detail: { hours: r.hours } }))}>
+                {r.label}
+              </button>
+            ))}
+          </div>
+          <div className="inline-flex items-center gap-2">
+            <div className="inline-flex items-center hairline rounded-full">
+              <button className="px-2 py-1 rounded-l-full hover:bg-white/5" title="Linear"
+                onClick={() => window.dispatchEvent(new CustomEvent('monswap:chart-scale', { detail: { mode: 'linear' } }))}>↗</button>
+              <button className="px-2 py-1 rounded-r-full hover:bg-white/5" title="Log"
+                onClick={() => window.dispatchEvent(new CustomEvent('monswap:chart-scale', { detail: { mode: 'log' } }))}>∿</button>
+            </div>
+            <div className="inline-flex items-center hairline rounded-full px-2 py-1">
+              <select className="bg-transparent text-xs outline-none" defaultValue="price"
+                onChange={(e)=> window.dispatchEvent(new CustomEvent('monswap:chart-priceMode', { detail: { kind: e.target.value } }))}>
+                <option value="price">Price</option>
+                <option value="percent">%</option>
+                <option value="index">Index</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
