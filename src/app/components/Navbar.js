@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { motion } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import ConnectButton from "./ConnectButton"
@@ -15,6 +15,14 @@ export default function Navbar() {
     // Close mobile menu on route change
     setMobileOpen(false)
   }, [pathname])
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") setMobileOpen(false)
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [])
 
   const linkClass = (href) =>
     `px-3 py-1.5 rounded-full text-sm transition ${pathname.startsWith(href) ? "bg-white/10 text-foreground" : "text-foreground/90 hover:bg-white/5"}`
@@ -55,21 +63,51 @@ export default function Navbar() {
           </button>
         </div>
       </div>
-      {mobileOpen && (
-        <div className="sm:hidden">
-          <div className="px-6 pb-4 grid gap-2">
-            <Link href="/trade" className={linkClass('/trade')}>Trade</Link>
-            <Link href="/pools" className={linkClass('/pools')}>Pools</Link>
-            <Link href="/dashboard" className={linkClass('/dashboard')}>Dashboard</Link>
-            <Link href="/vote" className={linkClass('/vote')}>Vote</Link>
-            <div className="h-2" />
-            <button className="w-full px-4 py-2 rounded-full text-sm text-foreground/90 hover:text-foreground hover:bg-white/5 transition-colors text-left">Docs</button>
-            <div className="pt-2">
-              <ConnectButton />
-            </div>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            <motion.button
+              aria-label="Close menu"
+              className="fixed inset-0 z-[60] bg-black/0 sm:hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.4 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setMobileOpen(false)}
+            />
+            <motion.div
+              className="fixed inset-y-0 right-0 z-[61] w-80 max-w-[85vw] bg-[#0e0e0e] hairline-l sm:hidden p-4"
+              initial={{ x: 320 }}
+              animate={{ x: 0 }}
+              exit={{ x: 320 }}
+              transition={{ type: "spring", stiffness: 420, damping: 40 }}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm text-[--color-muted]">Menu</span>
+                <button
+                  aria-label="Close"
+                  className="inline-flex items-center justify-center w-8 h-8 rounded-full hover:bg-white/5"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                </button>
+              </div>
+              <div className="grid gap-2">
+                <Link href="/trade" className={linkClass('/trade')}>Trade</Link>
+                <Link href="/pools" className={linkClass('/pools')}>Pools</Link>
+                <Link href="/dashboard" className={linkClass('/dashboard')}>Dashboard</Link>
+                <Link href="/vote" className={linkClass('/vote')}>Vote</Link>
+                <button className="mt-2 px-4 py-2 rounded-full text-sm text-foreground/90 hover:text-foreground hover:bg-white/5 transition-colors text-left">Docs</button>
+                <div className="pt-2">
+                  <ConnectButton />
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </motion.nav>
   )
 }
