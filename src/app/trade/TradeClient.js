@@ -38,7 +38,7 @@ export default function TradeClient() {
 
   return (
     <div className="mx-auto" style={{ maxWidth: 1120 }}>
-      <div className="relative flex">
+      <div className={`relative flex ${mode === 'pro' ? 'justify-center md:justify-start' : 'justify-center'}`}>
         <AnimatePresence initial={false}>
           {mode === "pro" && (
             <motion.div
