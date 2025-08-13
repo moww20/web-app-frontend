@@ -149,9 +149,6 @@ export default function SplashPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
-          <h1 className="text-6xl md:text-8xl lg:text-[9rem] font-extralight tracking-tight leading-none text-shine">
-            MONSWAP
-          </h1>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -160,11 +157,6 @@ export default function SplashPage() {
             <p className="mt-4 text-lg md:text-xl text-[--color-muted] max-w-2xl mx-auto leading-relaxed">
               Ultra-fast, deeply liquid, and truly decentralized. Built for the Monad ecosystem.
             </p>
-            <div className="mt-8 flex items-center justify-center">
-              <Link href="/trade" className="px-6 py-3 rounded-full bg-accent-gradient text-white font-medium hover:opacity-90 transition">
-                Get started
-              </Link>
-            </div>
           </motion.div>
         </motion.div>
         
@@ -217,7 +209,7 @@ export default function SplashPage() {
         </div>
         
         <motion.div
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-16 relative z-10 max-w-6xl w-full px-4"
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-6 relative z-10 max-w-6xl w-full px-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 0.5 }}
@@ -241,26 +233,17 @@ export default function SplashPage() {
             delay={1.0}
           />
         </motion.div>
-        
+
         <motion.div
-          className="text-center relative z-10"
-          initial={{ opacity: 0, y: 50 }}
+          className="text-center relative z-10 mt-8"
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.9 }}
+          transition={{ duration: 0.8, delay: 0.8 }}
         >
-          <div className="flex justify-center gap-10 text-[--color-muted]">
-            <div className="text-center">
-              <p className="text-4xl font-light text-foreground mb-1">0.03%</p>
-              <p className="text-sm">Trading fees</p>
-            </div>
-            <div className="text-center">
-              <p className="text-4xl font-light text-foreground mb-1">∞</p>
-              <p className="text-sm">Scalability</p>
-            </div>
-            <div className="text-center">
-              <p className="text-4xl font-light text-foreground mb-1">100%</p>
-              <p className="text-sm">Decentralized</p>
-            </div>
+          <div className="flex items-center justify-center">
+            <Link href="/trade" className="px-6 py-3 rounded-full bg-accent-gradient text-white font-medium hover:opacity-90 transition">
+              Get started
+            </Link>
           </div>
         </motion.div>
       </div>
