@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import SwapCard from "../components/SwapCard"
+import dynamic from "next/dynamic"
+const ChartPanel = dynamic(() => import("./ChartPanel"), { ssr: false })
 
 export default function TradeClient() {
   const [mode, setMode] = useState("basic")
@@ -48,11 +50,8 @@ export default function TradeClient() {
               animate={{ opacity: 1, width: CHART_WIDTH, marginRight: 24 }}
               exit={{ opacity: 0, width: 0, marginRight: 0 }}
               transition={{ duration: 0.55, ease: 'easeInOut' }}
-              style={{ height: swapHeight || undefined }}
             >
-              <div className="glass hairline rounded-2xl p-4 h-full text-sm text-[--color-muted]">
-                Chart (placeholder)
-              </div>
+              <ChartPanel height={swapHeight || 520} />
             </motion.div>
           )}
         </AnimatePresence>
