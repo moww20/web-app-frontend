@@ -39,23 +39,21 @@ export default function ChartPanel({ height, useMock = true, pair = "ETH/USDT" }
     })
     seriesRef.current = areaSeries
 
-    function generateMock24h() {
-      const now = Math.floor(Date.now() / 1000)
-      const start = now - 24 * 60 * 60
-      const steps = 720 // ~2 min interval for higher resolution
+    function generateMock24hHourly() {
+      // End at the current local hour (e.g., 04:00), then step back hourly
+      const endDate = new Date()
+      endDate.setMinutes(0, 0, 0)
+      const endTs = Math.floor(endDate.getTime() / 1000)
       const points = []
-      let price = 4269.98 // starting value close to screenshot
+      let price = 4269.98
       const target = 4621.85
-      for (let i = 0; i <= steps; i++) {
-        const t = start + Math.floor((i * 24 * 60 * 60) / steps)
-        // Upward drift towards target
-        const drift = (target - price) * 0.006
-        // Noise
-        const noise = (Math.sin(i / 5) + Math.sin(i / 13) * 0.6 + Math.sin(i / 29) * 0.3) * 1.6
-        const jitter = (Math.random() - 0.5) * 0.6
-        price = price + drift + noise + jitter
-        // Add a jump around 75% of the way to mimic breakout
-        if (i === Math.floor(steps * 0.72)) price += 120
+      // Produce exactly 24 hourly points ending at the current local hour
+      for (let i = 23; i >= 0; i--) {
+        const t = endTs - i * 3600
+        const progress = (24 - i) / 24
+        const drift = (target - price) * 0.03 * progress
+        const noise = (Math.sin(i / 1.7) + Math.sin(i / 3.3) * 0.6) * 1.2
+        price = price + drift + noise
         points.push({ time: t, value: Math.max(4200, price) })
       }
       return points
@@ -63,30 +61,33 @@ export default function ChartPanel({ height, useMock = true, pair = "ETH/USDT" }
 
     const load = async () => {
       if (useMock) {
-        const pts = generateMock24h()
+        const pts = generateMock24hHourly()
         areaSeries.setData(pts)
-        // Add 10 date markers before the most recent day with prices
-        const lastTs = pts[pts.length - 1]?.time || Math.floor(Date.now() / 1000)
-        const day = 24 * 60 * 60
-        const markers = []
-        for (let i = 12; i > 2; i--) {
-          const t = lastTs - i * day
-          const idx = pts.findIndex(p => p.time >= t)
-          const y = idx > 0 ? pts[idx].value : pts[0].value
-          markers.push({
-            time: t,
-            position: 'belowBar',
-            color: '#6aa8ff',
-            shape: 'circle',
-            text: new Date(t * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ` $${y.toFixed(0)}`,
-          })
-        }
-        if (typeof areaSeries.setMarkers === 'function') {
-          areaSeries.setMarkers(markers)
-        }
-        // Default to 1D visible range
+        // Default to 1D visible range (last 24h ending at the current local hour)
         chart.priceScale('right').applyOptions({ mode: PriceScaleMode.Normal })
-        chart.timeScale().setVisibleRange({ from: lastTs - 24*60*60, to: lastTs })
+        const lastTs = pts[pts.length - 1]?.time || Math.floor(Date.now() / 1000)
+        chart.timeScale().applyOptions({
+          timeVisible: true,
+          secondsVisible: false,
+          tickMarkFormatter: (time) => {
+            let d
+            if (typeof time === 'number') {
+              d = new Date(time * 1000)
+            } else if (time && typeof time === 'object' && 'year' in time) {
+              d = new Date(time.year, (time.month || 1) - 1, time.day || 1)
+            } else {
+              return ''
+            }
+            const minutes = d.getMinutes()
+            if (minutes !== 0) return ''
+            const hoursLocal = d.getHours()
+            if (hoursLocal === 0) {
+              return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+            }
+            return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false })
+          },
+        })
+        chart.timeScale().setVisibleRange({ from: lastTs - 24 * 3600, to: lastTs })
         return
       }
       try {
@@ -97,7 +98,33 @@ export default function ChartPanel({ height, useMock = true, pair = "ETH/USDT" }
         const data = await res.json()
         const points = (data?.prices || []).map(([ts, price]) => ({ time: Math.floor(ts / 1000), value: price }))
         areaSeries.setData(points)
-        chart.timeScale().fitContent()
+        // Apply 1D formatting and range by default for real data
+        chart.priceScale('right').applyOptions({ mode: PriceScaleMode.Normal })
+        chart.timeScale().applyOptions({
+          timeVisible: true,
+          secondsVisible: false,
+          tickMarkFormatter: (time) => {
+            let d
+            if (typeof time === 'number') {
+              d = new Date(time * 1000)
+            } else if (time && typeof time === 'object' && 'year' in time) {
+              d = new Date(time.year, (time.month || 1) - 1, time.day || 1)
+            } else {
+              return ''
+            }
+            const minutes = d.getMinutes()
+            if (minutes !== 0) return ''
+            const hoursLocal = d.getHours()
+            if (hoursLocal === 0) {
+              return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+            }
+            return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false })
+          },
+        })
+        const tsNow = Math.floor(Date.now() / 1000)
+        const tzOffsetSec = new Date().getTimezoneOffset() * 60
+        const endAlignedLocal = Math.floor((tsNow - tzOffsetSec) / 3600) * 3600 + tzOffsetSec
+        chart.timeScale().setVisibleRange({ from: endAlignedLocal - 24 * 3600, to: endAlignedLocal })
       } catch {}
     }
     load()
@@ -108,7 +135,79 @@ export default function ChartPanel({ height, useMock = true, pair = "ETH/USDT" }
       const { hours } = ev.detail || {}
       if (!hours) return
       const ts = Math.floor(Date.now() / 1000)
-      chart.timeScale().setVisibleRange({ from: ts - hours * 3600, to: ts })
+      // Switch x-axis label style based on intraday vs multi-day
+      if (hours === 24) {
+        chart.timeScale().applyOptions({
+          timeVisible: true,
+          secondsVisible: false,
+          tickMarkFormatter: (time) => {
+            let d
+            if (typeof time === 'number') {
+              d = new Date(time * 1000)
+            } else if (time && typeof time === 'object' && 'year' in time) {
+              d = new Date(time.year, (time.month || 1) - 1, time.day || 1)
+            } else {
+              return ''
+            }
+            const minutes = d.getMinutes()
+            // For 1D view, show whole-hour labels and date at midnight
+            if (minutes !== 0) return ''
+            const hoursLocal = d.getHours()
+            if (hoursLocal === 0) {
+              return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+            }
+            return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false })
+          },
+        })
+      } else if (hours <= 6) {
+        chart.timeScale().applyOptions({
+          timeVisible: true,
+          secondsVisible: false,
+          tickMarkFormatter: (time /* Time */, tickMarkType, locale) => {
+            // Support both UTCTimestamp (number) and BusinessDay ({ year, month, day })
+            let d
+            if (typeof time === 'number') {
+              d = new Date(time * 1000)
+            } else if (time && typeof time === 'object' && 'year' in time) {
+              d = new Date(Date.UTC(time.year, (time.month || 1) - 1, time.day || 1))
+            } else {
+              return ''
+            }
+            const minutesLocal = d.getMinutes()
+            if (minutesLocal !== 0) return ''
+            return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: false })
+          },
+        })
+      } else {
+        chart.timeScale().applyOptions({
+          timeVisible: false,
+          secondsVisible: false,
+          tickMarkFormatter: (time /* Time */) => {
+            // Fallback to short date labels for multi-day ranges
+            if (typeof time === 'number') {
+              const d = new Date(time * 1000)
+              return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+            }
+            if (time && typeof time === 'object' && 'year' in time) {
+              return `${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][Math.max(0, (time.month || 1) - 1)]} ${time.day}`
+            }
+            return ''
+          },
+        })
+      }
+      // Align intraday ranges to local whole-hour boundaries for cleaner ticks
+      if (hours === 24) {
+        // For 1D, align to the current local hour and show last 24 full hours
+        const tzOffsetSec = new Date().getTimezoneOffset() * 60
+        const endAlignedLocal = Math.floor((ts - tzOffsetSec) / 3600) * 3600 + tzOffsetSec
+        chart.timeScale().setVisibleRange({ from: endAlignedLocal - hours * 3600, to: endAlignedLocal })
+      } else if (hours <= 6) {
+        const tzOffsetSec = new Date().getTimezoneOffset() * 60
+        const endAlignedLocal = Math.floor((ts - tzOffsetSec) / 3600) * 3600 + tzOffsetSec
+        chart.timeScale().setVisibleRange({ from: endAlignedLocal - hours * 3600, to: endAlignedLocal })
+      } else {
+        chart.timeScale().setVisibleRange({ from: ts - hours * 3600, to: ts })
+      }
     }
     const onScale = (ev) => {
       const { mode } = ev.detail || {}
