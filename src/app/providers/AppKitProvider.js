@@ -8,9 +8,12 @@ import { WagmiAdapter } from "@reown/appkit-adapter-wagmi"
 import { monadTestnet } from "@reown/appkit/networks"
 
 // Initialize AppKit at module scope so hooks can be used immediately
-// Sanitize projectId to avoid stray quotes/newlines from envs
+// Sanitize projectId to avoid stray quotes/newlines from envs (handles CR/LF on Vercel)
 const rawProjectId = process.env.NEXT_PUBLIC_PROJECT_ID || "REPLACE_WITH_REOWN_PROJECT_ID"
-const projectId = (rawProjectId || "").replace(/^['"]|['"]$/g, "").trim()
+const projectId = (rawProjectId || "")
+  .replace(/^['"]|['"]$/g, "") // strip surrounding quotes
+  .replace(/\s+/g, "") // remove any whitespace incl. \r\n
+  .trim()
 const networks = [monadTestnet]
 const wagmiAdapter = new WagmiAdapter({ networks, projectId, ssr: true })
 
