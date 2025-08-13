@@ -40,18 +40,18 @@ export default function ChartPanel({ height, useMock = true, pair = "ETH/USDT" }
     function generateMock24h() {
       const now = Math.floor(Date.now() / 1000)
       const start = now - 24 * 60 * 60
-      const steps = 240 // ~6 min interval
+      const steps = 720 // ~2 min interval for higher resolution
       const points = []
       let price = 4269.98 // starting value close to screenshot
       const target = 4621.85
       for (let i = 0; i <= steps; i++) {
         const t = start + Math.floor((i * 24 * 60 * 60) / steps)
-        const progress = i / steps
         // Upward drift towards target
-        const drift = (target - price) * 0.01
+        const drift = (target - price) * 0.006
         // Noise
-        const noise = (Math.sin(i / 6) + Math.sin(i / 17) * 0.5) * 2
-        price = price + drift + noise
+        const noise = (Math.sin(i / 5) + Math.sin(i / 13) * 0.6 + Math.sin(i / 29) * 0.3) * 1.6
+        const jitter = (Math.random() - 0.5) * 0.6
+        price = price + drift + noise + jitter
         // Add a jump around 75% of the way to mimic breakout
         if (i === Math.floor(steps * 0.72)) price += 120
         points.push({ time: t, value: Math.max(4200, price) })
