@@ -81,7 +81,7 @@ export default function TradeClient() {
                   </div>
                   <div className="inline-flex items-center rounded-full px-0 py-0">
                     <select
-                      className="text-xs outline-none bg-[#141414] hairline rounded-full px-3 py-1"
+                      className="text-xs outline-none bg-transparent hairline rounded-full px-3 py-1 focus:bg-transparent"
                       value={priceMode}
                       onChange={(e)=> { setPriceMode(e.target.value); window.dispatchEvent(new CustomEvent('monswap:chart-priceMode', { detail: { kind: e.target.value } })) }}
                     >
