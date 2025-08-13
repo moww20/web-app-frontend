@@ -23,18 +23,18 @@ export default function PoolsClient() {
   }, [])
 
   const btnClass = "h-8 w-36 px-4 rounded-lg hairline hover:bg-white/5 text-sm inline-flex items-center justify-center whitespace-nowrap"
-	  const rows = Array.from({ length: 6 }).map((_, i) => (
+  const rows = Array.from({ length: 6 }).map((_, i) => (
     <div
       key={i}
-      className="grid grid-cols-1 md:grid-cols-8 items-center px-4 py-3 hairline-b last:hairline-b-0 cursor-pointer hover:bg-white/3"
+      className="grid grid-cols-2 md:grid-cols-8 items-center px-4 py-3 hairline-b last:hairline-b-0 cursor-pointer hover:bg-white/3"
       onClick={() => setIsDetailsOpen(true)}
     >
-	      <div className="block md:col-span-2 min-w-0">TokenA / TokenB</div>
+      <div className="col-span-1 md:col-span-2 min-w-0">TokenA / TokenB</div>
       <div className="hidden md:block min-w-0">$ —</div>
       <div className="hidden md:block min-w-0">APR —</div>
       <div className="hidden md:block min-w-0">Liquidity —</div>
       <div className="hidden md:block min-w-0">Voting APR —</div>
-      <div className="md:col-span-2 flex items-center gap-2 justify-start md:justify-end" onClick={(e) => e.stopPropagation()}>
+      <div className="col-span-1 md:col-span-2 flex items-center gap-2 justify-end" onClick={(e) => e.stopPropagation()}>
         <button className={btnClass} onClick={(e) => { e.stopPropagation(); setIsSwapOpen(true) }}>Swap</button>
         <button className={btnClass} onClick={(e) => { e.stopPropagation(); setIsAddOpen(true) }}>+Liquidity</button>
         <button className={btnClass} onClick={(e) => { e.stopPropagation(); setIsBribeOpen(true) }}>Bribe</button>
@@ -49,15 +49,15 @@ export default function PoolsClient() {
         <h1 className="text-3xl md:text-4xl font-light tracking-tight">Liquidity Pools</h1>
       </div>
 
-	    <section className="glass hairline rounded-2xl overflow-hidden">
-	        <div className="grid grid-cols-1 md:grid-cols-8 px-4 py-3 text-sm text-[--color-muted] hairline-b bg-white/5">
-	          <div className="block md:col-span-2">Pool</div>
-	          <div className="hidden md:block">24h Volume</div>
-	          <div className="hidden md:block">APR</div>
-	          <div className="hidden md:block">Liquidity</div>
-	          <div className="hidden md:block">Voting APR</div>
-	          <div className="md:col-span-2">Actions</div>
-	        </div>
+      <section className="glass hairline rounded-2xl overflow-hidden">
+        <div className="grid grid-cols-2 md:grid-cols-8 px-4 py-3 text-sm text-[--color-muted] hairline-b bg-white/5">
+          <div className="col-span-1 md:col-span-2">Pool</div>
+          <div className="hidden md:block">24h Volume</div>
+          <div className="hidden md:block">APR</div>
+          <div className="hidden md:block">Liquidity</div>
+          <div className="hidden md:block">Voting APR</div>
+          <div className="col-span-1 md:col-span-2">Actions</div>
+        </div>
         {rows}
       </section>
 
