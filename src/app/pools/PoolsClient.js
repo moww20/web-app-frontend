@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import SwapCard from "../components/SwapCard"
 import AddLiquidityCard from "../components/AddLiquidityCard"
 import PoolDetailsCard from "../components/PoolDetailsCard"
@@ -13,6 +14,7 @@ export default function PoolsClient() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
   const [isBribeOpen, setIsBribeOpen] = useState(false)
   const [isVoteOpen, setIsVoteOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const pageSize = 6
   const [page, setPage] = useState(1)
 
@@ -23,6 +25,8 @@ export default function PoolsClient() {
     document.addEventListener("keydown", onKey)
     return () => document.removeEventListener("keydown", onKey)
   }, [])
+
+  useEffect(() => { setMounted(true) }, [])
 
   const pools = Array.from({ length: 24 }).map((_, i) => ({
     id: i + 1,
@@ -100,69 +104,84 @@ export default function PoolsClient() {
         </div>
       </section>
 
-      {isSwapOpen && (
-        <div className="fixed inset-0 z-[60] flex items-start justify-center pt-40 md:pt-48">
-          <button
-            className="absolute inset-0 bg-black/50 backdrop-blur-md"
-            aria-label="Close"
-            onClick={() => setIsSwapOpen(false)}
-          />
-          <div className="relative w-full max-w-lg mx-4">
-            <SwapCard />
+      {mounted && isSwapOpen && createPortal(
+        (
+          <div className="fixed inset-0 z-[70] flex items-start justify-center pt-40 md:pt-48">
+            <button
+              className="absolute inset-0 bg-black/50 backdrop-blur-md"
+              aria-label="Close"
+              onClick={() => setIsSwapOpen(false)}
+            />
+            <div className="relative w-full max-w-lg mx-4">
+              <SwapCard />
+            </div>
           </div>
-        </div>
+        ),
+        document.body
       )}
 
-      {isAddOpen && (
-        <div className="fixed inset-0 z-[60] flex items-start justify-center pt-40 md:pt-48">
-          <button
-            className="absolute inset-0 bg-black/50 backdrop-blur-md"
-            aria-label="Close"
-            onClick={() => setIsAddOpen(false)}
-          />
-          <div className="relative w-full max-w-lg mx-4">
-            <AddLiquidityCard />
+      {mounted && isAddOpen && createPortal(
+        (
+          <div className="fixed inset-0 z-[70] flex items-start justify-center pt-40 md:pt-48">
+            <button
+              className="absolute inset-0 bg-black/50 backdrop-blur-md"
+              aria-label="Close"
+              onClick={() => setIsAddOpen(false)}
+            />
+            <div className="relative w-full max-w-lg mx-4">
+              <AddLiquidityCard />
+            </div>
           </div>
-        </div>
+        ),
+        document.body
       )}
 
-      {isDetailsOpen && (
-        <div className="fixed inset-0 z-[60] flex items-start justify-center pt-40 md:pt-48">
-          <button
-            className="absolute inset-0 bg-black/50 backdrop-blur-md"
-            aria-label="Close"
-            onClick={() => setIsDetailsOpen(false)}
-          />
-          <div className="relative w-full max-w-lg mx-4">
-            <PoolDetailsCard />
+      {mounted && isDetailsOpen && createPortal(
+        (
+          <div className="fixed inset-0 z-[70] flex items-start justify-center pt-40 md:pt-48">
+            <button
+              className="absolute inset-0 bg-black/50 backdrop-blur-md"
+              aria-label="Close"
+              onClick={() => setIsDetailsOpen(false)}
+            />
+            <div className="relative w-full max-w-lg mx-4">
+              <PoolDetailsCard />
+            </div>
           </div>
-        </div>
+        ),
+        document.body
       )}
 
-      {isBribeOpen && (
-        <div className="fixed inset-0 z-[60] flex items-start justify-center pt-40 md:pt-48">
-          <button
-            className="absolute inset-0 bg-black/50 backdrop-blur-md"
-            aria-label="Close"
-            onClick={() => setIsBribeOpen(false)}
-          />
-          <div className="relative w-full max-w-lg mx-4">
-            <BribeCard />
+      {mounted && isBribeOpen && createPortal(
+        (
+          <div className="fixed inset-0 z-[70] flex items-start justify-center pt-40 md:pt-48">
+            <button
+              className="absolute inset-0 bg-black/50 backdrop-blur-md"
+              aria-label="Close"
+              onClick={() => setIsBribeOpen(false)}
+            />
+            <div className="relative w-full max-w-lg mx-4">
+              <BribeCard />
+            </div>
           </div>
-        </div>
+        ),
+        document.body
       )}
 
-      {isVoteOpen && (
-        <div className="fixed inset-0 z-[60] flex items-start justify-center pt-40 md:pt-48">
-          <button
-            className="absolute inset-0 bg-black/50 backdrop-blur-md"
-            aria-label="Close"
-            onClick={() => setIsVoteOpen(false)}
-          />
-          <div className="relative w-full max-w-lg mx-4">
-            <VoteCard />
+      {mounted && isVoteOpen && createPortal(
+        (
+          <div className="fixed inset-0 z-[70] flex items-start justify-center pt-40 md:pt-48">
+            <button
+              className="absolute inset-0 bg-black/50 backdrop-blur-md"
+              aria-label="Close"
+              onClick={() => setIsVoteOpen(false)}
+            />
+            <div className="relative w-full max-w-lg mx-4">
+              <VoteCard />
+            </div>
           </div>
-        </div>
+        ),
+        document.body
       )}
     </div>
   )
