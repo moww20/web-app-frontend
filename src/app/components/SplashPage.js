@@ -2,327 +2,110 @@
 
 import { Canvas } from "@react-three/fiber"
 import { Environment } from "@react-three/drei"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useRef } from "react"
 import { useFrame } from "@react-three/fiber"
-import * as THREE from "three"
 import { motion } from "framer-motion"
 import Link from "next/link"
 // Navbar is now global, no local connect button needed here
 
-function SimpleCube({ controlledPosition, color, visible = true, fadeRef, dustCount = 220 }) {
-  const instRef = useRef()
-  const matRef = useRef()
-  const offsets = useMemo(() => {
-    const arr = []
-    for (let i = 0; i < dustCount; i++) {
-      arr.push(new THREE.Vector3(
-        (Math.random() * 1.2 - 0.6),
-        (Math.random() * 1.2 - 0.6),
-        (Math.random() * 1.2 - 0.6),
-      ))
-    }
-    return arr
-  }, [dustCount])
-
-  useFrame(({ clock }) => {
-    if (!instRef.current) return
-    const pos = controlledPosition || [0, 0, 0]
-    const t = clock.getElapsedTime()
-    const twinkle = (i) => (Math.sin(t * 2 + i) + 1) * 0.5
-    const dummy = new THREE.Object3D()
-    for (let i = 0; i < offsets.length; i++) {
-      const o = offsets[i]
-      dummy.position.set(pos[0] + o.x, pos[1] + o.y, pos[2] + o.z)
-      const s = 0.06 + twinkle(i) * 0.02
-      dummy.scale.setScalar(s)
-      dummy.rotation.set(0, 0, 0)
-      dummy.updateMatrix()
-      instRef.current.setMatrixAt(i, dummy.matrix)
-    }
-    instRef.current.instanceMatrix.needsUpdate = true
-    // Fade during morph
-    if (matRef.current) {
-      const k = fadeRef?.current ?? 1
-      matRef.current.opacity = k
-      matRef.current.transparent = true
-    }
-  })
-
-  if (!visible) return null
-  return (
-    <instancedMesh ref={instRef} args={[null, null, offsets.length]}>
-      <sphereGeometry args={[1, 6, 6]} />
-      <meshStandardMaterial ref={matRef} color={color} metalness={0.2} roughness={0.8} opacity={0.95} />
-    </instancedMesh>
-  )
-}
-
-function PhysicsCubes({ visible = true, phase = 'cubes', phaseStart = 0, explodeDur = 0.5 }) {
-  const fadeRef = useRef(1)
-  const cubesRef = useRef([
-    { pos: new THREE.Vector3(-2, 0, 0), vel: new THREE.Vector3(0.06, 0.04, 0), color: '#eaeef3' },
-    { pos: new THREE.Vector3(2, 0, 0), vel: new THREE.Vector3(-0.05, 0.03, 0), color: '#d7dbe2' },
-    { pos: new THREE.Vector3(0, 2, 0), vel: new THREE.Vector3(0.04, -0.05, 0), color: '#f5f7fa' },
+function SimpleCube({ position = [0, 0, 0], color = "#ffffff", id = 0, cubeRefs }) {
+  const meshRef = useRef()
+  const safePos = Array.isArray(position) && position.length === 3 ? position : [0, 0, 0]
+  const posRef = useRef([...safePos])
+  const velocityRef = useRef([
+    (Math.random() - 0.5) * 0.08,
+    (Math.random() - 0.5) * 0.08,
+    0
   ])
-  const bounds = { left: -4.5, right: 4.5, bottom: -2.5, top: 2.5 }
-
-  useFrame(({ clock }) => {
-    if (!visible) return
-    // Fade as morph starts
-    if (phase === 'morph') {
-      const elapsed = Math.max(0, clock.getElapsedTime() - phaseStart)
-      fadeRef.current = THREE.MathUtils.clamp(1 - elapsed / explodeDur, 0, 1)
-    } else {
-      fadeRef.current = 1
-    }
-    // Integrate movement with simple collisions
-    const cubes = cubesRef.current
-    // Wall collisions
-    for (const c of cubes) {
-      c.pos.add(c.vel)
-      // Friction
-      c.vel.multiplyScalar(0.999)
-      if (c.pos.x > bounds.right || c.pos.x < bounds.left) {
-        c.vel.x = -c.vel.x
-        c.pos.x = THREE.MathUtils.clamp(c.pos.x, bounds.left, bounds.right)
-      }
-      if (c.pos.y > bounds.top || c.pos.y < bounds.bottom) {
-        c.vel.y = -c.vel.y
-        c.pos.y = THREE.MathUtils.clamp(c.pos.y, bounds.bottom, bounds.top)
-      }
-    }
-    // Pairwise collisions (elastic-ish)
-    for (let i = 0; i < cubes.length; i++) {
-      for (let j = i + 1; j < cubes.length; j++) {
-        const a = cubes[i], b = cubes[j]
-        const dx = a.pos.x - b.pos.x
-        const dy = a.pos.y - b.pos.y
-        const dist = Math.hypot(dx, dy)
-        const minDist = 1.5
-        if (dist < minDist && dist > 0.0001) {
-          const nx = dx / dist, ny = dy / dist
-          const overlap = minDist - dist
-          a.pos.x += nx * overlap * 0.5
-          a.pos.y += ny * overlap * 0.5
-          b.pos.x -= nx * overlap * 0.5
-          b.pos.y -= ny * overlap * 0.5
-          const va = a.vel.clone(), vb = b.vel.clone()
-          const rel = va.sub(vb)
-          const sep = rel.x * nx + rel.y * ny
-          if (sep < 0) {
-            const impulse = -1.1 * sep
-            a.vel.x += nx * impulse
-            a.vel.y += ny * impulse
-            b.vel.x -= nx * impulse
-            b.vel.y -= ny * impulse
+  
+  // Register this cube's ref
+  cubeRefs.current[id] = {
+    position: posRef,
+    velocity: velocityRef,
+    mesh: meshRef
+  }
+  
+  useFrame(() => {
+    if (meshRef.current) {
+      meshRef.current.rotation.x += 0.02
+      meshRef.current.rotation.y += 0.02
+      
+      const pos = posRef.current
+      const velocity = velocityRef.current
+      
+      // Check collisions with other cubes
+      Object.keys(cubeRefs.current).forEach(otherId => {
+        otherId = parseInt(otherId)
+        if (otherId !== id && otherId > id) { // Only check each pair once
+          const otherCube = cubeRefs.current[otherId]
+          if (otherCube && otherCube.position) {
+            const otherPos = otherCube.position.current
+            const otherVel = otherCube.velocity.current
+            
+            const dx = pos[0] - otherPos[0]
+            const dy = pos[1] - otherPos[1]
+            const distance = Math.sqrt(dx * dx + dy * dy)
+            const minDistance = 1.5
+            
+            if (distance < minDistance && distance > 0.01) {
+              // Force separation first
+              const overlap = minDistance - distance + 0.1 // Add buffer
+              const normalX = dx / distance
+              const normalY = dy / distance
+              
+              // Push cubes apart more aggressively
+              const pushForce = overlap * 0.6
+              pos[0] += normalX * pushForce
+              pos[1] += normalY * pushForce
+              otherPos[0] -= normalX * pushForce
+              otherPos[1] -= normalY * pushForce
+              
+              // Simple velocity reversal with randomization
+              velocity[0] = normalX * Math.abs(velocity[0]) * 1.2 + (Math.random() - 0.5) * 0.02
+              velocity[1] = normalY * Math.abs(velocity[1]) * 1.2 + (Math.random() - 0.5) * 0.02
+              otherVel[0] = -normalX * Math.abs(otherVel[0]) * 1.2 + (Math.random() - 0.5) * 0.02
+              otherVel[1] = -normalY * Math.abs(otherVel[1]) * 1.2 + (Math.random() - 0.5) * 0.02
+            }
           }
         }
+      })
+      
+      // Update position
+      pos[0] += velocity[0]
+      pos[1] += velocity[1]
+      
+      // Bounce off edges with randomization
+      if (pos[0] > 4.5 || pos[0] < -4.5) {
+        velocity[0] = -velocity[0] * 0.9 + (Math.random() - 0.5) * 0.02
+        pos[0] = pos[0] > 4.5 ? 4.5 : -4.5
       }
+      if (pos[1] > 2.5 || pos[1] < -2.5) {
+        velocity[1] = -velocity[1] * 0.9 + (Math.random() - 0.5) * 0.02
+        pos[1] = pos[1] > 2.5 ? 2.5 : -2.5
+      }
+      
+      meshRef.current.position.set(pos[0], pos[1], pos[2])
     }
   })
-
+  
   return (
-    <>
-      {cubesRef.current.map((c, idx) => (
-        <SimpleCube key={idx} controlledPosition={[c.pos.x, c.pos.y, c.pos.z]} color={c.color} visible={visible} fadeRef={fadeRef} />
-      ))}
-    </>
+    <mesh ref={meshRef} position={position} castShadow receiveShadow>
+      <boxGeometry args={[1.2, 1.2, 1.2]} />
+      <meshStandardMaterial color={color} metalness={1} roughness={0.08} envMapIntensity={1.1} />
+    </mesh>
   )
 }
 
-function MorphingParticles({ text = "MONSWAP", phase = "cubes" }) {
-  const meshRef = useRef()
-  const matRef = useRef()
-  const count = 1800
+// Navbar moved to global layout
 
-  const cubeCenters = useMemo(() => [
-    new THREE.Vector3(-2, 0, 0),
-    new THREE.Vector3(2, 0, 0),
-    new THREE.Vector3(0, 2, 0),
-  ], [])
-
-  const targetPositions = useMemo(() => {
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
-    const W = 800, H = 200
-    canvas.width = W
-    canvas.height = H
-    ctx.clearRect(0, 0, W, H)
-    ctx.fillStyle = '#fff'
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.font = 'bold 150px system-ui, Arial, sans-serif'
-    ctx.fillText(text, W/2, H/2)
-    const image = ctx.getImageData(0, 0, W, H).data
-    const pts = []
-    const step = 4
-    for (let y = 0; y < H; y += step) {
-      for (let x = 0; x < W; x += step) {
-        const idx = (y * W + x) * 4
-        if (image[idx + 3] > 180) {
-          const nx = (x / W) * 12 - 6
-          const ny = -((y / H) * 3 - 1.5)
-          const nz = (Math.random() - 0.5) * 0.2
-          pts.push(new THREE.Vector3(nx, ny, nz))
-        }
-      }
-    }
-    // Ensure there are targets; fallback to a simple line if text rasterization fails
-    if (pts.length === 0) {
-      for (let i = 0; i < 1200; i++) {
-        const t = (i / 1200) * Math.PI * 2
-        pts.push(new THREE.Vector3(Math.cos(t) * 3.5, Math.sin(t) * 0.4, 0))
-      }
-    }
-    return pts
-  }, [text])
-
-  const initialPositionsRef = useRef([])
-  const velocitiesRef = useRef([])
-  const rotationsRef = useRef([])
-  const scalesRef = useRef([])
-  const startedRef = useRef(false)
-  const startTimeRef = useRef(0)
-
-  useEffectOnce(() => {
-    const initial = []
-    const velocities = []
-    const rots = []
-    const scales = []
-    for (let i = 0; i < count; i++) {
-      const center = cubeCenters[i % cubeCenters.length]
-      // Sample within cube volume (approx 1.2 size) for clear origin from cubes
-      const p = new THREE.Vector3(
-        center.x + (Math.random() * 1.2 - 0.6),
-        center.y + (Math.random() * 1.2 - 0.6),
-        center.z + (Math.random() * 1.2 - 0.6),
-      )
-      initial.push(p)
-      // Initial velocity: outward from the cube center with jitter
-      const dir = p.clone().sub(center).normalize()
-      const jitter = new THREE.Vector3(
-        (Math.random() - 0.5) * 0.6,
-        (Math.random() - 0.5) * 0.6,
-        (Math.random() - 0.5) * 0.6,
-      )
-      const v = dir.multiplyScalar(3.2).add(jitter)
-      velocities.push(v)
-      rots.push(new THREE.Euler(
-        (Math.random() - 0.5) * 0.8,
-        (Math.random() - 0.5) * 1.2,
-        (Math.random() - 0.5) * 0.8
-      ))
-      scales.push(THREE.MathUtils.lerp(0.9, 1.4, Math.random()))
-    }
-    initialPositionsRef.current = initial
-    velocitiesRef.current = velocities
-    rotationsRef.current = rots
-    scalesRef.current = scales
-  })
-
-  useFrame((state, delta) => {
-    if (!meshRef.current) return
-    const totalTargets = targetPositions.length
-    const ip = initialPositionsRef.current
-    const vel = velocitiesRef.current
-    // Safety guards to avoid accessing undefined arrays during first frames
-    if (totalTargets === 0 || ip.length < count || vel.length < count) return
-    const dummy = new THREE.Object3D()
-    const now = state.clock.getElapsedTime()
-    const exploded = phase !== 'cubes'
-    if (exploded && !startedRef.current) {
-      startedRef.current = true
-      startTimeRef.current = now
-    }
-    const t = Math.max(0, now - startTimeRef.current)
-    const explodeDur = 0.9
-    const morphStart = explodeDur
-    const morphDur = 1.6
-    const totalDur = explodeDur + morphDur
-    const morphK = THREE.MathUtils.clamp((t - morphStart) / morphDur, 0, 1)
-
-    for (let i = 0; i < count; i++) {
-      const init = ip[i]
-      if (!init) continue
-      const idx = Math.floor((i / count) * totalTargets)
-      const target = targetPositions[idx]
-      if (!target) continue
-      let pos
-      if (!exploded) {
-        pos = init
-      } else if (t < explodeDur) {
-        init.add(vel[i].clone().multiplyScalar(delta * 2.2))
-        vel[i].multiplyScalar(0.98)
-        pos = init
-      } else {
-        const toTarget = target.clone().sub(init)
-        const lerpPos = init.clone().add(toTarget.multiplyScalar(morphK))
-        pos = lerpPos
-      }
-      dummy.position.copy(pos)
-      const baseS = exploded ? (t < totalDur ? THREE.MathUtils.lerp(0.012, 0.016, Math.min(1, t / 0.6)) : 0.016) : 0.012
-      const shardScale = baseS * (scalesRef.current[i] || 1)
-      dummy.scale.setScalar(shardScale)
-      const r = rotationsRef.current[i]
-      if (r) dummy.rotation.set(r.x || 0, (r.y || 0) + morphK * 0.3, r.z || 0)
-      dummy.updateMatrix()
-      meshRef.current.setMatrixAt(i, dummy.matrix)
-    }
-    meshRef.current.instanceMatrix.needsUpdate = true
-
-    // Particle visibility/metallic feel over time
-    if (matRef.current) {
-      let alpha = 0
-      if (exploded) {
-        alpha = t < 0.2 ? THREE.MathUtils.smootherstep(t, 0, 0.2) : 1
-      }
-      matRef.current.transparent = true
-      matRef.current.opacity = THREE.MathUtils.clamp(alpha, 0, 1)
-      // Increase reflectivity as it morphs into text
-      const metal = THREE.MathUtils.lerp(0.6, 1.0, morphK)
-      const rough = THREE.MathUtils.lerp(0.35, 0.12, morphK)
-      const envI = THREE.MathUtils.lerp(0.9, 1.4, morphK)
-      matRef.current.metalness = metal
-      matRef.current.roughness = rough
-      matRef.current.clearcoat = 0.6
-      matRef.current.envMapIntensity = envI
-    }
-  })
-
-  return (
-    <group rotation={[-0.18, 0.12, 0]}>
-      <instancedMesh ref={meshRef} args={[null, null, count]}>
-        <boxGeometry args={[1, 0.35, 0.35]} />
-        <meshPhysicalMaterial ref={matRef} color="#dfe5ee" metalness={0.6} roughness={0.35} clearcoat={0.3} clearcoatRoughness={0.25} envMapIntensity={0.9} />
-      </instancedMesh>
-    </group>
-  )
-}
-
-function useEffectOnce(callback) {
-  const callbackRef = useRef(callback)
-  useEffect(() => {
-    callbackRef.current = callback
-  })
-  useEffect(() => {
-    return callbackRef.current && callbackRef.current()
-  }, [])
-}
-
-function DiceToTextScene() {
-  const [phase, setPhase] = useState('cubes')
-  const phaseStartRef = useRef(0)
-  useFrame(({ clock }) => {
-    const t = clock.getElapsedTime()
-    if (phase === 'cubes' && t > 2.0) {
-      setPhase('morph')
-      phaseStartRef.current = t
-    }
-  })
+function CubeScene() {
+  const cubeRefs = useRef({})
+  
   return (
     <>
-      <PhysicsCubes visible={true} phase={phase} phaseStart={phaseStartRef.current} explodeDur={0.9} />
-      <MorphingParticles phase={phase} />
+      <SimpleCube position={[-2, 0, 0]} color="#eaeef3" id={0} cubeRefs={cubeRefs} />
+      <SimpleCube position={[2, 0, 0]} color="#d7dbe2" id={1} cubeRefs={cubeRefs} />
+      <SimpleCube position={[0, 2, 0]} color="#f5f7fa" id={2} cubeRefs={cubeRefs} />
     </>
   )
 }
@@ -424,7 +207,7 @@ export default function SplashPage() {
             {/* Subtle studio environment for better reflections */}
             <Environment preset="studio" intensity={0.5} />
 
-            <DiceToTextScene />
+            <CubeScene />
 
             {/* Ground plane for shadows */}
             <mesh receiveShadow position={[0, -4, 0]} rotation={[-Math.PI / 2, 0, 0]}>
