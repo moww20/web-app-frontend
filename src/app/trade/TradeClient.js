@@ -38,15 +38,12 @@ export default function TradeClient() {
 
   return (
     <div className="mx-auto" style={{ maxWidth: 1120 }}>
-      <div
-        className="relative"
-        style={{ width: mode === 'pro' ? Math.min(1120, (CHART_WIDTH + GAP + (swapWidth || 512))) : (swapWidth || undefined) }}
-      >
+      <div className="relative flex">
         <AnimatePresence initial={false}>
           {mode === "pro" && (
             <motion.div
               key="chart"
-              className="absolute left-0 top-0 bottom-0 hidden md:block"
+              className="hidden md:block mr-6"
               initial={{ opacity: 0, x: -24 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -24 }}
@@ -62,10 +59,10 @@ export default function TradeClient() {
         <motion.div
           key="swap"
           initial={false}
-          animate={mode === "pro" ? { x: CHART_WIDTH + GAP } : { x: 0 }}
+          animate={{ x: 0 }}
           transition={{ type: "spring", stiffness: 200, damping: 26 }}
         >
-          <div ref={swapRef}>
+          <div ref={swapRef} className="inline-block">
             <SwapCard />
           </div>
         </motion.div>
