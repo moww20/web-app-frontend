@@ -16,7 +16,7 @@ export default function VotingPage() {
   ))
 
   return (
-    <main className="min-h-[80vh] max-w-7xl mx-auto px-6 py-24">
+    <main className="min-h-[80vh] max-w-7xl mx-auto px-6 py-16">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl md:text-4xl font-light tracking-tight">Voting</h1>
       </div>

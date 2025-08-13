@@ -5,7 +5,7 @@ export const metadata = {
 
 export default function DashboardPage() {
   return (
-    <main className="min-h-[80vh] max-w-7xl mx-auto px-6 py-24">
+    <main className="min-h-[80vh] max-w-7xl mx-auto px-6 py-16">
       <h1 className="text-3xl md:text-4xl font-light tracking-tight mb-8">Dashboard</h1>
       <div className="origin-top animate-fadein-500">
 

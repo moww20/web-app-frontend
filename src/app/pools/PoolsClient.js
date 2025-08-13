@@ -106,7 +106,7 @@ export default function PoolsClient() {
 
       {mounted && isSwapOpen && createPortal(
         (
-          <div className="fixed inset-0 z-[70] flex items-start justify-center pt-40 md:pt-48">
+          <div className="fixed inset-0 z-[70] flex items-start justify-center pt-24">
             <button
               className="absolute inset-0 bg-black/50 backdrop-blur-md"
               aria-label="Close"
@@ -122,7 +122,7 @@ export default function PoolsClient() {
 
       {mounted && isAddOpen && createPortal(
         (
-          <div className="fixed inset-0 z-[70] flex items-start justify-center pt-40 md:pt-48">
+          <div className="fixed inset-0 z-[70] flex items-start justify-center pt-24">
             <button
               className="absolute inset-0 bg-black/50 backdrop-blur-md"
               aria-label="Close"
@@ -138,7 +138,7 @@ export default function PoolsClient() {
 
       {mounted && isDetailsOpen && createPortal(
         (
-          <div className="fixed inset-0 z-[70] flex items-start justify-center pt-40 md:pt-48">
+          <div className="fixed inset-0 z-[70] flex items-start justify-center pt-24">
             <button
               className="absolute inset-0 bg-black/50 backdrop-blur-md"
               aria-label="Close"
@@ -154,7 +154,7 @@ export default function PoolsClient() {
 
       {mounted && isBribeOpen && createPortal(
         (
-          <div className="fixed inset-0 z-[70] flex items-start justify-center pt-40 md:pt-48">
+          <div className="fixed inset-0 z-[70] flex items-start justify-center pt-24">
             <button
               className="absolute inset-0 bg-black/50 backdrop-blur-md"
               aria-label="Close"
@@ -170,7 +170,7 @@ export default function PoolsClient() {
 
       {mounted && isVoteOpen && createPortal(
         (
-          <div className="fixed inset-0 z-[70] flex items-start justify-center pt-40 md:pt-48">
+          <div className="fixed inset-0 z-[70] flex items-start justify-center pt-24">
             <button
               className="absolute inset-0 bg-black/50 backdrop-blur-md"
               aria-label="Close"
