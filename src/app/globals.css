@@ -163,3 +163,46 @@ code {
   border-radius: 8px;
   padding: 0.125rem 0.375rem;
 }
+
+/* Subtle Apple-like hover utilities */
+.hover-tint {
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, opacity 150ms ease;
+}
+.hover-tint:hover {
+  background-color: color-mix(in oklab, #ffffff 8%, transparent);
+  border-color: color-mix(in oklab, var(--accent) 30%, rgba(255,255,255,0.12));
+}
+
+.hover-vibrant {
+  transition: backdrop-filter 150ms ease, -webkit-backdrop-filter 150ms ease, filter 150ms ease;
+}
+.hover-vibrant:hover {
+  -webkit-backdrop-filter: saturate(125%) brightness(105%);
+  backdrop-filter: saturate(125%) brightness(105%);
+}
+
+.hover-outline {
+  transition: box-shadow 150ms ease;
+}
+.hover-outline:hover {
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--accent) 35%, transparent);
+}
+
+/* Apply Apple-like tint/vibrancy to all buttons within glass cards */
+.glass button {
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, opacity 150ms ease, box-shadow 150ms ease, backdrop-filter 150ms ease, -webkit-backdrop-filter 150ms ease;
+}
+.glass button:hover {
+  background-color: color-mix(in oklab, #ffffff 8%, transparent);
+  border-color: color-mix(in oklab, var(--accent) 30%, rgba(255,255,255,0.12));
+  -webkit-backdrop-filter: saturate(125%) brightness(105%);
+  backdrop-filter: saturate(125%) brightness(105%);
+}
+
+/* Extra polish for primary gradient and hairline buttons */
+.glass button.bg-accent-gradient:hover {
+  box-shadow: 0 6px 18px -6px color-mix(in oklab, var(--accent) 35%, transparent);
+}
+.glass .hairline:hover {
+  border-color: color-mix(in oklab, var(--accent) 35%, transparent);
+}

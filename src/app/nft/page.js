@@ -19,26 +19,26 @@ const contractAbi = [
 ]
 
 export default function NftMintPage() {
-  const { isConnected, address } = useAccount()
+  const { isConnected } = useAccount()
   const [selected, setSelected] = useState(null)
-  const [quantity, setQuantity] = useState(1)
-  const [ethValue, setEthValue] = useState("")
+  const [quantity] = useState(1)
+  const [monValue, setMonValue] = useState("")
 
   const { writeContract, data: txHash, error: writeError, isPending } = useWriteContract()
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash: txHash })
 
   useEffect(() => {
     if (!selected) return
-    setEthValue(selected.priceEth || "")
+    setMonValue(selected.priceMon || "")
   }, [selected])
 
   const onMint = async () => {
     if (!isConnected) return
     if (!selected?.address) return
-    const qty = Math.max(1, Number(quantity) || 1)
+    const qty = 1
     let value
     try {
-      value = ethValue ? parseEther(ethValue) : undefined
+      value = monValue ? parseEther(monValue) : undefined
     } catch (_) {
       value = undefined
     }
@@ -55,8 +55,7 @@ export default function NftMintPage() {
 
   const closeModal = () => {
     setSelected(null)
-    setQuantity(1)
-    setEthValue("")
+    setMonValue("")
   }
 
   return (
@@ -69,28 +68,27 @@ export default function NftMintPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {collections.map((c) => (
-              <div
-                key={c.id}
-                className="text-left glass hairline rounded-2xl overflow-hidden hover:-translate-y-0.5 transition-transform h-full flex flex-col"
-              >
-                <Link href={`/nft/${c.id}`} className="block">
-                  <div className="aspect-video w-full bg-white/5 overflow-hidden">
-                    <img src={c.image} alt={c.name} className="w-full h-full object-cover" />
-                  </div>
-                </Link>
-                <div className="p-3 flex flex-col flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-base md:text-lg font-medium tracking-tight">{c.name}</h3>
-                    <span className="text-[10px] md:text-xs text-[--color-muted]">{c.priceEth} ETH</span>
-                  </div>
-                  <div className="mt-1.5 flex items-start justify-between gap-3">
-                    <p className="text-xs md:text-sm text-[--color-muted] line-clamp-2 pr-2">{c.description}</p>
-                    <button
-                      onClick={() => setSelected(c)}
-                      className="shrink-0 inline-flex items-center justify-center rounded-full bg-accent-gradient text-white px-3 py-1.5 text-xs md:text-sm"
-                    >
-                      Mint
-                    </button>
+              <div key={c.id} className="group relative h-full">
+                <div className="text-left glass hairline rounded-2xl overflow-hidden transition-transform duration-300 h-full flex flex-col group-hover:-translate-y-0.5 group-hover:scale-[1.01]">
+                  <Link href={`/nft/${c.id}`} className="block">
+                    <div className="relative aspect-video w-full bg-white/5 overflow-hidden">
+                      <img src={c.image} alt={c.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    </div>
+                  </Link>
+                  <div className="p-3 flex flex-col flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-base md:text-lg font-medium tracking-tight">{c.name}</h3>
+                      <span className="text-[10px] md:text-xs text-[--color-muted]">{c.priceMon} MON</span>
+                    </div>
+                    <div className="mt-1.5 flex items-start justify-between gap-3">
+                      <p className="text-xs md:text-sm text-[--color-muted] line-clamp-2 pr-2">{c.description}</p>
+                      <button
+                        onClick={() => setSelected(c)}
+                        className="shrink-0 inline-flex items-center justify-center rounded-full bg-accent-gradient text-white px-3 py-1.5 text-xs md:text-sm transition-transform duration-200 hover:scale-[1.02] hover:opacity-95 hover:shadow-[0_0_0_2px_rgba(255,255,255,0.18),0_0_16px_4px_rgba(90,168,255,0.25)] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                      >
+                        Mint
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -100,16 +98,29 @@ export default function NftMintPage() {
       </main>
 
       {selected && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+        <div className="fixed inset-0 z-[100] flex items-start justify-center">
           <button aria-label="Close" onClick={closeModal} className="absolute inset-0 bg-black/50" />
-          <div className="relative z-[101] w-full max-w-md glass hairline rounded-2xl p-6">
-            <div className="flex items-start justify-between gap-4 mb-3">
+          <div className="relative z-[101] w-full max-w-lg glass hairline rounded-2xl p-4 md:p-5 mt-24 md:mt-28">
+            {/* Header */}
+            <div className="flex items-start justify-between gap-4 mb-4">
               <div>
-                <h2 className="text-xl font-semibold tracking-tight">Mint {selected.name}</h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl md:text-2xl font-semibold tracking-tight">{selected.name}</h2>
+                  <a
+                    href="https://testnet.monadexplorer.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Open Monad Testnet explorer"
+                    className="inline-flex items-center justify-center w-7 h-7 rounded hairline hover:bg-white/5"
+                  >
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M7 17l10-10M17 7H7m10 0v10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </a>
+                </div>
+                <div className="mt-1 text-xs text-[--color-muted]">On Monad Testnet</div>
                 {!selected.address && (
-                  <p className="text-xs text-yellow-300 mt-1">
-                    Contract not configured. Set env var for this collection and reload.
-                  </p>
+                  <p className="text-xs text-yellow-300 mt-1">Contract not configured. Set env var for this collection and reload.</p>
                 )}
               </div>
               <button
@@ -123,52 +134,67 @@ export default function NftMintPage() {
               </button>
             </div>
 
-            <div className="rounded-xl overflow-hidden mb-4">
-              <img src={selected.image} alt={selected.name} className="w-full h-40 object-cover" />
+            {/* Top grid: image + meta */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+              <div className="rounded-xl overflow-hidden">
+                <img src={selected.image} alt={selected.name} className="w-full h-56 md:h-56 object-cover" />
+              </div>
+              <div className="flex flex-col">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <div className="text-[--color-muted]">Total Mints</div>
+                    <div className="text-lg font-medium">{selected.totalMints ?? "—"}</div>
+                  </div>
+                  <div>
+                    <div className="text-[--color-muted]">Max Supply</div>
+                    <div className="text-lg font-medium">{selected.maxSupply ?? "—"}</div>
+                  </div>
+                  <div>
+                    <div className="text-[--color-muted]">Mint Progress</div>
+                    <div className="text-lg font-medium">{selected.totalMints != null && selected.maxSupply ? `${Math.min(100, Math.round((selected.totalMints / selected.maxSupply) * 100))}%` : "—"}</div>
+                  </div>
+                  <div>
+                    <div className="text-[--color-muted]">Ends In</div>
+                    <div className="text-lg font-medium">{selected.endsIn ?? "—"}</div>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <Link href={`/nft/${selected.id}`} className="inline-flex items-center justify-center rounded-full hairline px-4 py-2 text-sm hover:bg-white/5">
+                    Explore Collection
+                    <svg className="w-3.5 h-3.5 ml-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 17l10-10M17 7H7m10 0v10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </Link>
+                </div>
+
+                {/* Inline mint controls below Explore */}
+                <div className="mt-4 hairline-t pt-3">
+                  <div className="grid grid-cols-1 gap-3 items-center">
+                    <div>
+                      <div className="text-[--color-muted] text-sm">Price</div>
+                      <div className="text-xl font-semibold">{selected.priceMon} MON</div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="text-[--color-muted] text-sm">Quantity</div>
+                      <div className="inline-flex items-center gap-2 rounded-full hairline px-3 py-1.5 text-sm opacity-60">
+                        <button disabled className="w-6 h-6 inline-flex items-center justify-center rounded-full bg-white/5 cursor-not-allowed">–</button>
+                        <span className="min-w-[2ch] text-center">1</span>
+                        <button disabled className="w-6 h-6 inline-flex items-center justify-center rounded-full bg-white/5 cursor-not-allowed">+</button>
+                      </div>
+                    </div>
+                    <div className="justify-self-start md:justify-self-end">
+                      <button
+                        disabled={!isConnected || !selected.address || isPending}
+                        onClick={onMint}
+                        className="w-full md:w-auto inline-flex items-center justify-center rounded-full bg-accent-gradient text-white px-5 py-2.5 disabled:opacity-50 transition-transform duration-200 hover:scale-[1.02] hover:opacity-95 hover:shadow-[0_0_0_2px_rgba(255,255,255,0.18),0_0_16px_4px_rgba(90,168,255,0.25)] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                      >
+                        {isPending ? "Confirm in wallet…" : isConfirming ? "Waiting for confirmation…" : "Mint"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="grid gap-4">
-              <label className="grid gap-1 text-sm">
-                <span className="text-[--color-muted]">Quantity</span>
-                <input
-                  type="number"
-                  min={1}
-                  step={1}
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  className="w-full rounded-lg bg-white/5 px-3 py-2 outline-none border border-white/10 focus:border-white/20"
-                />
-              </label>
-
-              <label className="grid gap-1 text-sm">
-                <span className="text-[--color-muted]">ETH value (optional per tx)</span>
-                <input
-                  type="text"
-                  placeholder="e.g. 0.02"
-                  value={ethValue}
-                  onChange={(e) => setEthValue(e.target.value)}
-                  className="w-full rounded-lg bg-white/5 px-3 py-2 outline-none border border-white/10 focus:border-white/20"
-                />
-              </label>
-
-              <button
-                disabled={!isConnected || !selected.address || isPending}
-                onClick={onMint}
-                className="mt-2 inline-flex items-center justify-center rounded-full bg-accent-gradient text-white px-5 py-2.5 disabled:opacity-50"
-              >
-                {isPending ? "Confirm in wallet…" : isConfirming ? "Waiting for confirmation…" : "Mint"}
-              </button>
-            </div>
-
-            <div className="mt-4 text-sm">
-              {writeError && <p className="text-red-400">{writeError.shortMessage || writeError.message}</p>}
-              {txHash && <p className="text-[--color-muted] break-all">Tx: {txHash}</p>}
-              {isConfirmed && <p className="text-green-400">Mint confirmed!</p>}
-            </div>
-
-            <div className="mt-6 text-xs text-[--color-muted]">
-              <p>Connected: {isConnected ? address : "Not connected"}</p>
-            </div>
+            
           </div>
         </div>
       )}

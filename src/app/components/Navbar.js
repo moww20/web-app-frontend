@@ -7,6 +7,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import ConnectButton from "./ConnectButton"
 import SearchBar from "./SearchBar"
+import DonateButton from "./DonateButton"
 
 export default function Navbar() {
   const pathname = usePathname()
@@ -53,6 +54,8 @@ export default function Navbar() {
           <SearchBar />
         </div>
         <div className="flex items-center justify-end gap-6">
+          <DonateButton />
+          <Link href="/nft" className={`${linkClass('/nft')} max-[559px]:hidden`}>NFTs</Link>
           <a
             href="https://monswap-docs.vercel.app/"
             target="_blank"
@@ -61,7 +64,6 @@ export default function Navbar() {
           >
             Docs
           </a>
-          <Link href="/nft" className={`${linkClass('/nft')} max-[559px]:hidden`}>NFTs</Link>
           <div className="hidden lg:block">
             <ConnectButton />
           </div>
@@ -115,6 +117,10 @@ export default function Navbar() {
                     <Link href="/pools" className={linkClass('/pools')}>Pools</Link>
                     <Link href="/dashboard" className={linkClass('/dashboard')}>Dashboard</Link>
                     <Link href="/vote" className={linkClass('/vote')}>Vote</Link>
+                    <div>
+                      <DonateButton />
+                    </div>
+                    <Link href="/nft" className={linkClass('/nft')}>NFTs</Link>
                     <a
                       href="https://monswap-docs.vercel.app/"
                       target="_blank"
@@ -123,7 +129,6 @@ export default function Navbar() {
                     >
                       Docs
                     </a>
-                    <Link href="/nft" className={linkClass('/nft')}>NFTs</Link>
                     <div className="pt-2">
                       <ConnectButton />
                     </div>

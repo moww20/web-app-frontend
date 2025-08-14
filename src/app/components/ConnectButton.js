@@ -14,13 +14,13 @@ export default function ConnectButton() {
       <div className="flex items-center gap-2">
         <button
           onClick={() => open?.()}
-          className="px-4 py-2 rounded-full hairline text-sm text-foreground/90 hover:bg-white/5 transition"
+          className="px-4 py-2 rounded-full hairline text-sm text-foreground/90 hover:bg-white/5 transition hover-tint hover-vibrant hover-outline"
         >
           {short}
         </button>
         <button
           onClick={() => disconnect()}
-          className="p-2 rounded-full text-foreground/80 hover:text-foreground hover:bg-white/5 transition"
+          className="p-2 rounded-full text-foreground/80 hover:text-foreground hover:bg-white/5 transition hover-tint hover-vibrant"
           title="Disconnect"
           aria-label="Disconnect"
         >
@@ -35,7 +35,7 @@ export default function ConnectButton() {
   }
 
   return (
-    <button onClick={() => open?.()} className="px-5 py-2 rounded-full bg-accent-gradient text-white hover:opacity-90 transition-opacity">
+    <button onClick={() => open?.()} className="px-5 py-2 rounded-full bg-accent-gradient text-white hover:opacity-90 transition-opacity hover-vibrant hover-outline">
       Connect Wallet
     </button>
   )

@@ -23,7 +23,7 @@ export default function CollectionDetailPage({ params }) {
         <div>
           <h1 className="text-3xl md:text-4xl font-light tracking-tight">{col.name}</h1>
           <p className="mt-2 text-[--color-muted] max-w-prose">{col.description}</p>
-          <div className="mt-4 text-sm text-[--color-muted]">Mint price: {col.priceEth} ETH</div>
+          <div className="mt-4 text-sm text-[--color-muted]">Mint price: {col.priceMon} MON</div>
         </div>
       </div>
     </main>
