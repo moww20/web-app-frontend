@@ -61,6 +61,7 @@ export default function Navbar() {
           >
             Docs
           </a>
+          <Link href="/nft" className={`${linkClass('/nft')} max-[559px]:hidden`}>NFTs</Link>
           <div className="hidden lg:block">
             <ConnectButton />
           </div>
@@ -122,6 +123,7 @@ export default function Navbar() {
                     >
                       Docs
                     </a>
+                    <Link href="/nft" className={linkClass('/nft')}>NFTs</Link>
                     <div className="pt-2">
                       <ConnectButton />
                     </div>

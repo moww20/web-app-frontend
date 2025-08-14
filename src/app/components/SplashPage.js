@@ -2,7 +2,7 @@
 
 import { Canvas } from "@react-three/fiber"
 import { Environment } from "@react-three/drei"
-import { useRef } from "react"
+import { useRef, useEffect, useState } from "react"
 import { useFrame } from "@react-three/fiber"
 import { motion } from "framer-motion"
 import Link from "next/link"
@@ -130,8 +130,15 @@ function FeatureCard({ title, description, icon, delay }) {
 // Removed 3D volumetric beams in favor of subtle page-level gradient accents
 
 export default function SplashPage() {
+  const [isDesktop, setIsDesktop] = useState(false)
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 1024)
+    handleResize()
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
   return (
-    <div className="min-h-screen relative overflow-hidden flex flex-col">
+    <div className="min-h-[calc(100vh-5rem)] relative overflow-hidden flex flex-col justify-between">
       {/* Global navbar rendered from layout */}
       {/* soft vignette for depth */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(80%_50%_at_50%_0%,rgba(255,255,255,0.06)_0%,transparent_60%)]" />
@@ -143,82 +150,83 @@ export default function SplashPage() {
         <div className="absolute right-[-10vw] top-[-10vh] w-[60vw] h-[120vh] rotate-[18deg] opacity-20 blur-3xl [mix-blend-mode:screen] bg-[linear-gradient(270deg,transparent_0%,color(display-p3_0.35_0.66_1/_0.65)_30%,transparent_75%)]" />
       </div>
       
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-24">
-        <motion.div 
-          className="text-center mb-20 relative z-10"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        >
-          <h1 className="text-6xl md:text-8xl lg:text-[9rem] font-extralight tracking-tight leading-none text-shine">
-            MONSWAP
-          </h1>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.3 }}
-          >
-            <p className="mt-4 text-lg md:text-xl text-[--color-muted] max-w-2xl mx-auto leading-relaxed">
-              Ultra-fast, deeply liquid, and truly decentralized. Built for the Monad ecosystem.
-            </p>
-            <div className="mt-8 flex items-center justify-center">
-              <Link href="/trade" className="px-6 py-3 rounded-full bg-accent-gradient text-white font-medium hover:opacity-90 transition">
-                Get started
-              </Link>
-            </div>
-          </motion.div>
-        </motion.div>
+			<div className="flex-1 flex flex-col items-center justify-center px-6 pt-4 md:pt-6 lg:pt-8 pb-2">
+				<motion.div 
+					className="text-center mb-6 md:mb-8 md:-mt-6 lg:-mt-8 relative z-10"
+				initial={{ opacity: 0, y: 20 }}
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ duration: 0.8, ease: "easeOut" }}
+			>
+					<div className="mx-auto mb-4 h-7 w-7 rounded-full bg-white/5" />
+				<h1 className="text-4xl md:text-6xl font-light tracking-tight">Swaps on Monad</h1>
+				<motion.div
+					initial={{ opacity: 0, y: 30 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 1, delay: 0.3 }}
+				>
+						<p className="mt-3 text-base md:text-lg text-[--color-muted] max-w-2xl mx-auto leading-relaxed">
+						Ultra-low latency swaps and aligned liquidity.
+					</p>
+						<div className="mt-6 flex items-center justify-center gap-3">
+						<Link href="/trade" className="px-6 py-3 rounded-full bg-accent-gradient text-white font-medium hover:opacity-90 transition">
+							Launch app
+						</Link>
+					</div>
+				</motion.div>
+			</motion.div>
         
-        <div className="fixed inset-0 z-0">
-          <Canvas
-            shadows
-            camera={{ position: [0, 0, 6], fov: 60 }}
-            gl={{ antialias: true }}
-          >
-            <fog attach="fog" args={["#0b0b0f", 6, 14]} />
-            <ambientLight intensity={0.18} />
-            <directionalLight
-              position={[6, 6, 8]}
-              intensity={0.5}
-              castShadow
-              shadow-mapSize-width={1024}
-              shadow-mapSize-height={1024}
-            />
-            {/* Side colored spotlights (subtle, for reflections) */}
-            <spotLight
-              position={[-12, 2, 2]}
-              intensity={1.2}
-              angle={0.5}
-              distance={36}
-              penumbra={0.9}
-              color="#ff4d5a"
-              castShadow
-            />
-            <spotLight
-              position={[12, -1, 2]}
-              intensity={1.0}
-              angle={0.5}
-              distance={36}
-              penumbra={0.9}
-              color="#5aa8ff"
-              castShadow
-            />
+			{isDesktop && (
+				<div className="fixed inset-0 z-0">
+					<Canvas
+						shadows
+						camera={{ position: [0, 0, 6], fov: 60 }}
+						gl={{ antialias: true }}
+					>
+						<fog attach="fog" args={["#0b0b0f", 6, 14]} />
+						<ambientLight intensity={0.18} />
+						<directionalLight
+							position={[6, 6, 8]}
+							intensity={0.5}
+							castShadow
+							shadow-mapSize-width={1024}
+							shadow-mapSize-height={1024}
+						/>
+						{/* Side colored spotlights (subtle, for reflections) */}
+						<spotLight
+							position={[-12, 2, 2]}
+							intensity={1.2}
+							angle={0.5}
+							distance={36}
+							penumbra={0.9}
+							color="#ff4d5a"
+							castShadow
+						/>
+						<spotLight
+							position={[12, -1, 2]}
+							intensity={1.0}
+							angle={0.5}
+							distance={36}
+							penumbra={0.9}
+							color="#5aa8ff"
+							castShadow
+						/>
 
-            {/* Subtle studio environment for better reflections */}
-            <Environment preset="studio" intensity={0.5} />
+						{/* Subtle studio environment for better reflections */}
+						<Environment preset="studio" intensity={0.5} />
 
-            <CubeScene />
+						<CubeScene />
 
-            {/* Ground plane for shadows */}
-            <mesh receiveShadow position={[0, -4, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-              <planeGeometry args={[30, 30]} />
-              <shadowMaterial opacity={0.22} />
-            </mesh>
-          </Canvas>
-        </div>
+						{/* Ground plane for shadows */}
+						<mesh receiveShadow position={[0, -4, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+							<planeGeometry args={[30, 30]} />
+							<shadowMaterial opacity={0.22} />
+						</mesh>
+					</Canvas>
+				</div>
+			)}
         
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-16 relative z-10 max-w-6xl w-full px-4"
+			<motion.div
+				className="hidden 2xl:grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-6 relative z-10 max-w-6xl w-full px-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 0.5 }}
@@ -243,31 +251,11 @@ export default function SplashPage() {
           />
         </motion.div>
         
-        <motion.div
-          className="text-center relative z-10"
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.9 }}
-        >
-          <div className="flex justify-center gap-10 text-[--color-muted]">
-            <div className="text-center">
-              <p className="text-4xl font-light text-foreground mb-1">0.03%</p>
-              <p className="text-sm">Trading fees</p>
-            </div>
-            <div className="text-center">
-              <p className="text-4xl font-light text-foreground mb-1">∞</p>
-              <p className="text-sm">Scalability</p>
-            </div>
-            <div className="text-center">
-              <p className="text-4xl font-light text-foreground mb-1">100%</p>
-              <p className="text-sm">Decentralized</p>
-            </div>
-          </div>
-        </motion.div>
+        
       </div>
       
       <motion.footer
-        className="relative z-10 text-center text-[--color-muted] text-sm py-8 hairline-t"
+        className="relative z-10 text-center text-[--color-muted] text-sm py-4 md:py-6 hairline-t"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1, delay: 1.2 }}
