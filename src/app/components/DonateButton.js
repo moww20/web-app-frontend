@@ -14,7 +14,7 @@ export default function DonateButton({ to = "0xA34Ac2472648925BBC12208f87573A318
   const { data: txHash, sendTransaction, isPending } = useSendTransaction()
 
   const [isOpen, setIsOpen] = useState(false)
-  const quick = ["0.01", "0.1", "1", "10", "100", "1000"]
+  const quick = ["0.01", "0.1", "1", "10", "25", "50"]
   const [selected, setSelected] = useState("1")
   const [custom, setCustom] = useState("")
 
