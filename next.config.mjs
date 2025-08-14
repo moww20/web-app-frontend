@@ -12,6 +12,20 @@ const nextConfig = {
       },
     ]
   },
+  async redirects() {
+    return [
+      {
+        source: '/docs',
+        destination: 'https://monswap-docs.vercel.app/',
+        permanent: true,
+      },
+      {
+        source: '/docs/:path*',
+        destination: 'https://monswap-docs.vercel.app/:path*',
+        permanent: true,
+      },
+    ]
+  },
   webpack: (config) => {
     config.resolve = config.resolve || {}
     config.resolve.alias = {

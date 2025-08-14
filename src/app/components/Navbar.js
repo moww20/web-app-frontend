@@ -53,7 +53,14 @@ export default function Navbar() {
           <SearchBar />
         </div>
         <div className="flex items-center justify-end gap-6">
-          <Link href="/docs" className={`${linkClass('/docs')} max-[519px]:hidden`}>Docs</Link>
+          <a
+            href="https://monswap-docs.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`${linkClass('/docs')} max-[519px]:hidden`}
+          >
+            Docs
+          </a>
           <div className="hidden lg:block">
             <ConnectButton />
           </div>
@@ -107,7 +114,14 @@ export default function Navbar() {
                     <Link href="/pools" className={linkClass('/pools')}>Pools</Link>
                     <Link href="/dashboard" className={linkClass('/dashboard')}>Dashboard</Link>
                     <Link href="/vote" className={linkClass('/vote')}>Vote</Link>
-                    <Link href="/docs" className={linkClass('/docs')}>Docs</Link>
+                    <a
+                      href="https://monswap-docs.vercel.app/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={linkClass('/docs')}
+                    >
+                      Docs
+                    </a>
                     <div className="pt-2">
                       <ConnectButton />
                     </div>
