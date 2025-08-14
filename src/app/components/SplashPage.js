@@ -159,7 +159,7 @@ export default function SplashPage() {
 			>
 					<div className="mx-auto mb-4 h-7 w-7 rounded-full bg-white/5" />
                 <div className="flex items-center justify-center">
-                  <div className="flex items-center -space-x-2">
+                  <div className="flex items-center -space-x-4">
                     <span className="text-4xl md:text-6xl font-mono tracking-tight typewriter">Swaps on</span>
                     <motion.img
                       src="/Monad%20Logo%20-%20Inverted%20-%20Horizontal%20Logo%20(1).svg"
