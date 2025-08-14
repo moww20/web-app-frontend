@@ -146,6 +146,16 @@ input[type='number'] {
   animation: fadein 500ms ease forwards;
 }
 
+/* Simple typewriter effect for splash headline */
+.typewriter {
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid color-mix(in oklab, var(--accent) 60%, transparent);
+  animation: typing 1.5s steps(12, end) 0.3s 1 normal both, caret 900ms step-end infinite;
+}
+@keyframes typing { from { width: 0 } to { width: 9.5ch } }
+@keyframes caret { from, to { border-color: transparent } 50% { border-color: color-mix(in oklab, var(--accent) 60%, transparent) } }
+
 /* Docs: code blocks without syntax plugin */
 pre, code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;

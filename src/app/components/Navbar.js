@@ -8,11 +8,13 @@ import { usePathname } from "next/navigation"
 import ConnectButton from "./ConnectButton"
 import SearchBar from "./SearchBar"
 import DonateButton from "./DonateButton"
+import { ChevronDown } from "lucide-react"
 
 export default function Navbar() {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [brandOpen, setBrandOpen] = useState(false)
 
   useEffect(() => {
     // Close mobile menu on route change
@@ -42,7 +44,30 @@ export default function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-6 py-4 grid grid-cols-3 items-center">
         <div className="flex items-center gap-6">
-          <Link href="/" className="text-lg tracking-tight font-semibold text-accent-gradient">monswap</Link>
+          <div
+            className="relative"
+            onMouseEnter={() => setBrandOpen(true)}
+            onMouseLeave={() => setBrandOpen(false)}
+          >
+            <Link href="/" className="text-lg tracking-tight font-semibold inline-flex items-center gap-1" aria-expanded={brandOpen}>
+              <span className="text-accent-gradient">monswap</span>
+              <ChevronDown className={`w-4 h-4 text-foreground/80 transition-transform ${brandOpen ? "-rotate-90" : ""}`} />
+            </Link>
+            {/* Hover bridge to keep dropdown open across the gap */}
+            <div className="absolute left-0 right-0 top-full h-2" />
+            <div className={`absolute left-0 mt-2 w-64 bg-[#0b0b0f] hairline rounded-xl shadow-2xl p-1 transition ${brandOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
+              <Link href="/nft" className="w-full text-left flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 text-sm">NFTs</Link>
+              <a
+                href="https://monswap-docs.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full text-left flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 text-sm"
+              >
+                Docs
+              </a>
+              <DonateButton asMenuItem />
+            </div>
+          </div>
           <nav className="flex items-center gap-2">
             <Link href="/trade" className={`${linkClass('/trade')} max-[559px]:hidden`}>Trade</Link>
             <Link href="/pools" className={`${linkClass('/pools')} max-[767px]:hidden`}>Pools</Link>
@@ -54,17 +79,8 @@ export default function Navbar() {
           <SearchBar />
         </div>
         <div className="flex items-center justify-end gap-6">
-          <DonateButton />
-          <Link href="/nft" className={`${linkClass('/nft')} max-[559px]:hidden`}>NFTs</Link>
-          <a
-            href="https://monswap-docs.vercel.app/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`${linkClass('/docs')} max-[519px]:hidden`}
-          >
-            Docs
-          </a>
-          <div className="hidden lg:block">
+          <div className="hidden lg:flex items-center gap-2">
+            <img src="/Monad%20Logo%20-%20White%20-%20Logo%20Mark.svg" alt="Monad" className="h-7 w-auto" />
             <ConnectButton />
           </div>
           <button
@@ -117,9 +133,7 @@ export default function Navbar() {
                     <Link href="/pools" className={linkClass('/pools')}>Pools</Link>
                     <Link href="/dashboard" className={linkClass('/dashboard')}>Dashboard</Link>
                     <Link href="/vote" className={linkClass('/vote')}>Vote</Link>
-                    <div>
-                      <DonateButton />
-                    </div>
+                    <DonateButton asMenuItem />
                     <Link href="/nft" className={linkClass('/nft')}>NFTs</Link>
                     <a
                       href="https://monswap-docs.vercel.app/"

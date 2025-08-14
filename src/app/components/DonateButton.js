@@ -8,7 +8,7 @@ import { useAppKit } from "@reown/appkit/react"
 import { Coffee, Wallet2 } from "lucide-react"
 import { motion } from "framer-motion"
 
-export default function DonateButton({ to = "0xA34Ac2472648925BBC12208f87573A318aa9b4EF" }) {
+export default function DonateButton({ to = "0xA34Ac2472648925BBC12208f87573A318aa9b4EF", asMenuItem = false }) {
   const { isConnected } = useAccount()
   const { open } = useAppKit()
   const { data: txHash, sendTransaction, isPending } = useSendTransaction()
@@ -158,17 +158,29 @@ export default function DonateButton({ to = "0xA34Ac2472648925BBC12208f87573A318
     </div>
   )
 
+  const trigger = asMenuItem ? (
+    <button
+      type="button"
+      className="w-full text-left flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 text-sm"
+      onClick={() => setIsOpen(true)}
+    >
+      <span>Buy us a coffee</span>
+    </button>
+  ) : (
+    <button
+      type="button"
+      title="Donate"
+      aria-label="Donate"
+      className="inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-white/5 text-foreground/90 hover-tint hover-vibrant"
+      onClick={() => setIsOpen(true)}
+    >
+      <Coffee className="w-5 h-5" />
+    </button>
+  )
+
   return (
     <>
-      <button
-        type="button"
-        title="Donate"
-        aria-label="Donate"
-        className="inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-white/5 text-foreground/90 hover-tint hover-vibrant"
-        onClick={() => setIsOpen(true)}
-      >
-        <Coffee className="w-5 h-5" />
-      </button>
+      {trigger}
       {isOpen && createPortal(modal, document.body)}
     </>
   )
