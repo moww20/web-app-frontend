@@ -18,7 +18,7 @@ export default function DonateButton({ to = "0xA34Ac2472648925BBC12208f87573A318
   const [selected, setSelected] = useState("1")
   const [custom, setCustom] = useState("")
 
-  const effectiveAmount = custom && Number(custom) > 0 ? custom : selected
+  const effectiveAmount = useMemo(() => (custom && Number(custom) > 0 ? custom : selected), [custom, selected])
 
   const value = useMemo(() => {
     try {
@@ -41,9 +41,12 @@ export default function DonateButton({ to = "0xA34Ac2472648925BBC12208f87573A318
     sendTransaction({ to, value })
   }
 
-  if (isConfirmed && isOpen) {
-    setIsOpen(false)
-  }
+  // Close modal after successful confirmation
+  useEffect(() => {
+    if (isConfirmed && isOpen) {
+      setIsOpen(false)
+    }
+  }, [isConfirmed, isOpen])
 
   useEffect(() => {
     if (!isOpen) return

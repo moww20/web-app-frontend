@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 
 function TokenButton({ symbol, onClick }) {
@@ -93,14 +93,13 @@ export default function AddLiquidityCard({
   }
 
   // Auto-calc Token B to match Token A's value
-  if (tokenPrices) {
-    // lightweight sync without extra render loops
+  useEffect(() => {
+    if (!tokenPrices) return
     const nextB = deriveAmountB(amountA, tokenA, tokenB)
     if (nextB !== amountB) {
-      // setAmountB only when it actually changes
-      setTimeout(() => setAmountB(nextB), 0)
+      setAmountB(nextB)
     }
-  }
+  }, [amountA, tokenA, tokenB, tokenPrices, amountB])
 
   return (
     <motion.div
