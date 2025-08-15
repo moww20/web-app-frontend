@@ -8,6 +8,15 @@ const nextConfig = {
           // Relax COOP/COEP for Coinbase Wallet SDK popups
           { key: 'Cross-Origin-Opener-Policy', value: 'unsafe-none' },
           { key: 'Cross-Origin-Embedder-Policy', value: 'unsafe-none' },
+          // Basic security hardening
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()' },
+          // Allow self and vercel analytics/assets; adjust as needed for wallet SDKs if they inject iframes/scripts
+          { key: 'Content-Security-Policy', value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.vercel-insights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.coingecko.com https://*.vercel-insights.com; frame-ancestors 'none'; object-src 'none'; base-uri 'self'" },
+          // HSTS (only effective over HTTPS; includeSubDomains optional)
+          { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
         ],
       },
     ]

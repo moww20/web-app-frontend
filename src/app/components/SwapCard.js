@@ -171,8 +171,8 @@ export default function SwapCard({
         setSettingsOpen(false)
       }
     }
-    document.addEventListener("mousedown", onDocDown)
-    return () => document.removeEventListener("mousedown", onDocDown)
+    document.addEventListener("mousedown", onDocDown, { capture: true })
+    return () => document.removeEventListener("mousedown", onDocDown, { capture: true })
   }, [settingsOpen, maxSlippage, slippageAuto, deadlineMins, mode])
 
   const handleToggleSettings = () => {
@@ -224,6 +224,25 @@ export default function SwapCard({
   useEffect(() => {
     setBuyAmount(deriveBuyAmount(sellAmount, sellToken, buyToken))
   }, [sellAmount, sellToken, buyToken])
+
+  // Switch tokens and recompute amounts accordingly
+  const onSwitchTokens = () => {
+    setSellToken((prevSell) => {
+      const nextSell = buyToken
+      const nextBuy = prevSell
+      setBuyToken(nextBuy)
+      // Recompute sellAmount to preserve value equivalence if possible
+      if (sellAmount) {
+        const newSellAmount = deriveBuyAmount(buyAmount, nextSell, nextBuy) || ""
+        const newBuyAmount = deriveBuyAmount(sellAmount, nextSell, nextBuy) || ""
+        setSellAmount(newSellAmount)
+        setBuyAmount(newBuyAmount)
+      } else {
+        setBuyAmount(deriveBuyAmount(sellAmount, nextSell, nextBuy))
+      }
+      return nextSell
+    })
+  }
 
   return (
     <motion.div
@@ -317,6 +336,7 @@ export default function SwapCard({
           <button
             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 p-2 rounded-xl bg-white/5 hover:bg-white/10 transition hairline shadow-sm"
             aria-label="Switch tokens"
+            onClick={onSwitchTokens}
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 16V4m0 0l-3.5 3.5M12 4l3.5 3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
