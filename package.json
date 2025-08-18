@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "bun scripts/ensure-bun-dev.js",
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
@@ -30,5 +31,9 @@
     "eslint": "^9",
     "eslint-config-next": "15.4.6",
     "tailwindcss": "^4"
-  }
+  },
+  "engines": {
+    "bun": ">=1.2.0"
+  },
+  "packageManager": "bun@1.2.20"
 }
