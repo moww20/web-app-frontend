@@ -1,0 +1,8 @@
+﻿.next/
+node_modules/
+dist/
+*.log
+.env*
+.vercel/
+.vscode/
+

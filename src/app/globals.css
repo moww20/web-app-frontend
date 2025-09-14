@@ -1,0 +1,218 @@
+@import "tailwindcss";
+
+/* Global design tokens tuned for a premium, minimal look */
+:root {
+  --background: #0b0b0f; /* deep neutral, not pure black */
+  --foreground: #e6e6e6; /* soft white */
+  --muted: #9aa0a6;      /* cool gray for secondary */
+  --hairline: rgba(255,255,255,0.08);
+  /* Red–Blue chrome accents */
+  --accent-red: #ff5563;
+  --accent-blue: #6aa8ff;
+  --accent: var(--accent-blue);
+  --accent-gradient: linear-gradient(90deg, var(--accent-red) 0%, var(--accent-blue) 100%);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-hairline: var(--hairline);
+  --color-accent: var(--accent);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "SF Pro Text", "SF Pro Display", var(--font-geist-sans), Inter, Arial, sans-serif;
+  --font-mono: var(--font-geist-mono);
+}
+
+html, body {
+  background: var(--background);
+  color: var(--foreground);
+  font-synthesis-weight: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--accent) 30%, transparent);
+  color: var(--foreground);
+}
+
+/* Hairline utilities for subtle separators */
+.hairline-b { border-bottom: 1px solid var(--hairline); }
+.hairline-t { border-top: 1px solid var(--hairline); }
+.hairline   { border: 1px solid var(--hairline); }
+
+/* Gradient text utility for premium headings */
+.text-shine {
+  background-image: linear-gradient(180deg, #ffffff 0%, #d6d7db 70%, #b8bac0 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Red–Blue gradient utilities */
+.bg-accent-gradient { background-image: var(--accent-gradient); }
+.text-accent-gradient {
+  background-image: var(--accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Subtle card backdrop */
+.glass {
+  background: color-mix(in oklab, #ffffff 4%, transparent);
+  -webkit-backdrop-filter: saturate(120%) blur(10px);
+  backdrop-filter: saturate(120%) blur(10px);
+}
+
+/* Input pill container highlight on focus within */
+.input-pill {
+  border: 1px solid var(--hairline);
+  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+.input-pill:focus-within {
+  border-color: color-mix(in oklab, var(--accent) 60%, transparent);
+}
+
+/* Remove inner focus ring for controls inside the pill */
+.input-pill :focus-visible {
+  outline: none;
+}
+
+/* Reduce default focus ring harshness */
+:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--accent) 60%, transparent);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Docs content width + typography */
+.docs-prose {
+  max-width: 80ch;
+  line-height: 1.7;
+}
+.docs-prose p { margin: 0.75rem 0; }
+.docs-prose ul { margin: 0.75rem 0 0.75rem 1.25rem; list-style: disc; padding-left: 1.25rem; }
+.docs-prose ol { margin: 0.75rem 0 0.75rem 1.25rem; list-style: decimal; padding-left: 1.25rem; }
+.docs-prose li { margin: 0.25rem 0; }
+.docs-prose li::marker { color: var(--color-muted); }
+
+/* Docs: heading hierarchy and spacing */
+.docs-prose h2 {
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.5rem; /* 24px */
+  line-height: 1.3;
+  font-weight: 600;
+}
+.docs-prose h2:not(:first-child) {
+  padding-top: 1rem;
+  border-top: 1px solid var(--hairline);
+}
+.docs-prose h3 {
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  font-size: 1.125rem; /* 18px */
+  line-height: 1.4;
+  font-weight: 600;
+  color: color-mix(in oklab, var(--foreground) 92%, transparent);
+}
+
+/* Remove spinners from number inputs (Chrome, Safari, Edge, Firefox) */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Shared fade-in for page content (server-safe) */
+@keyframes fadein {
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadein-500 {
+  opacity: 0;
+  transform: translateY(0.75rem);
+  animation: fadein 500ms ease forwards;
+}
+
+/* Simple typewriter effect for splash headline */
+.typewriter {
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid color-mix(in oklab, var(--accent) 60%, transparent);
+  animation: typing 1.5s steps(12, end) 0.3s 1 normal both, caret 900ms step-end infinite;
+}
+@keyframes typing { from { width: 0 } to { width: 9.5ch } }
+@keyframes caret { from, to { border-color: transparent } 50% { border-color: color-mix(in oklab, var(--accent) 60%, transparent) } }
+
+/* Docs: code blocks without syntax plugin */
+pre, code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+pre {
+  background: #141414;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 1rem;
+  overflow: auto;
+}
+code {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  padding: 0.125rem 0.375rem;
+}
+
+/* Subtle Apple-like hover utilities */
+.hover-tint {
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, opacity 150ms ease;
+}
+.hover-tint:hover {
+  background-color: color-mix(in oklab, #ffffff 8%, transparent);
+  border-color: color-mix(in oklab, var(--accent) 30%, rgba(255,255,255,0.12));
+}
+
+.hover-vibrant {
+  transition: backdrop-filter 150ms ease, -webkit-backdrop-filter 150ms ease, filter 150ms ease;
+}
+.hover-vibrant:hover {
+  -webkit-backdrop-filter: saturate(125%) brightness(105%);
+  backdrop-filter: saturate(125%) brightness(105%);
+}
+
+.hover-outline {
+  transition: box-shadow 150ms ease;
+}
+.hover-outline:hover {
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--accent) 35%, transparent);
+}
+
+/* Apply Apple-like tint/vibrancy to all buttons within glass cards */
+.glass button {
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, opacity 150ms ease, box-shadow 150ms ease, backdrop-filter 150ms ease, -webkit-backdrop-filter 150ms ease;
+}
+.glass button:hover {
+  background-color: color-mix(in oklab, #ffffff 8%, transparent);
+  border-color: color-mix(in oklab, var(--accent) 30%, rgba(255,255,255,0.12));
+  -webkit-backdrop-filter: saturate(125%) brightness(105%);
+  backdrop-filter: saturate(125%) brightness(105%);
+}
+
+/* Extra polish for primary gradient and hairline buttons */
+.glass button.bg-accent-gradient:hover {
+  box-shadow: 0 6px 18px -6px color-mix(in oklab, var(--accent) 35%, transparent);
+}
+.glass .hairline:hover {
+  border-color: color-mix(in oklab, var(--accent) 35%, transparent);
+}
